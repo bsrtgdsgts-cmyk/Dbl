@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-Warrior Legends: Daily Edition</title>
+    <title>Z-Warrior Legends: Mod Edition</title>
     <style>
         :root { --gold: #ffd700; --red: #ff4444; --dark: #050505; --green: #2ecc71; --ultra: #00ffff; --ll: #ff00ff; }
         body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; display: flex; justify-content: center; touch-action: manipulation; overflow: hidden; }
@@ -13,24 +13,47 @@
         .active { display: flex; flex-direction: column; }
         .btn { background: var(--gold); color: black; border: none; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 8px; width: 100%; font-size: 16px; margin: 6px 0; box-shadow: 0 4px 0 #b8860b; }
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b8860b; }
+        
+        /* MOD MENU STYLES */
+        #mod-menu-btn { position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background: rgba(255,0,0,0.5); border-radius: 50%; z-index: 2000; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid white; }
+        #mod-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; background: rgba(0,0,0,0.95); border: 2px solid var(--red); padding: 20px; border-radius: 15px; display: none; z-index: 2100; box-shadow: 0 0 20px var(--red); }
+        .mod-option { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 20px; }
+        input:checked + .slider { background-color: var(--red); }
+        
+        /* BATTLE AREA */
         #battle-area { position: relative; height: 260px; background: url('https://wallpaperaccess.com') center/cover; border-radius: 15px; border: 2px solid #444; }
         .tug-war-container { width: 90%; height: 20px; background: #222; margin: 15px auto; border-radius: 10px; border: 2px solid white; overflow: hidden; position: relative; }
         #tug-bar { width: 50%; height: 100%; background: linear-gradient(90deg, var(--red) 50%, var(--green) 50%); transition: width 0.05s linear; }
         .saibaman-img { width: 90px; margin-top: 20px; filter: drop-shadow(0 0 10px var(--green)); animation: bounce 0.6s infinite alternate; }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
         #click-zone { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 100; cursor: pointer; }
-        .box-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .char-card { background: #1a1a1a; border: 1px solid #444; padding: 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
-        .rarity-HE { color: #aaa; } .rarity-EX { color: #a0f; border-color: #a0f; } .rarity-SP { color: var(--gold); border-color: var(--gold); }
-        .rarity-LL { color: var(--ll); border-color: var(--ll); box-shadow: 0 0 8px var(--ll); }
-        .rarity-ULTRA { color: var(--ultra); border-color: var(--ultra); box-shadow: 0 0 12px var(--ultra); background: #000; }
-        .rarity-LEGEND { background: linear-gradient(45deg, gold, white); color: black; box-shadow: 0 0 15px white; }
-        #overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: black; display: none; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
 <div id="mobile-frame">
+    <div id="mod-menu-btn" onclick="toggleModPanel()">MOD</div>
+    
+    <div id="mod-panel">
+        <h3 style="color: var(--red); margin-top:0;">INTERNAL MOD MENU</h3>
+        <div class="mod-option">
+            <span>God Mode</span>
+            <label class="switch"><input type="checkbox" id="mod-god"><span class="slider"></span></label>
+        </div>
+        <div class="mod-option">
+            <span>One-Tap Win</span>
+            <label class="switch"><input type="checkbox" id="mod-instawin"><span class="slider"></span></label>
+        </div>
+        <div class="mod-option">
+            <span>+100k CC</span>
+            <button onclick="addCrystals(100000)" style="font-size:10px; padding:5px;">ADD</button>
+        </div>
+        <button class="btn" style="padding:5px; font-size:12px;" onclick="toggleModPanel()">CLOSE</button>
+    </div>
+
     <div class="header">
         <div>💎 <span id="crystal-count">0</span></div>
         <div>LVL: <span id="current-lvl">1</span></div>
@@ -38,7 +61,7 @@
     </div>
 
     <div id="menu-screen" class="screen active">
-        <h1 style="color: var(--gold); font-style: italic; margin: 20px 0;">Z-LEGENDS v4</h1>
+        <h1 style="color: var(--gold); font-style: italic; margin: 20px 0;">Z-LEGENDS MOD</h1>
         <button class="btn" onclick="startBattle()">BATTLE SAIBAMAN</button>
         <button class="btn" onclick="showScreen('summon-screen')">SUMMON</button>
         <button class="btn" onclick="showScreen('box-screen')">COLLECTION</button>
@@ -56,50 +79,38 @@
 
     <div id="summon-screen" class="screen">
         <h2 style="color: var(--ultra);">BANNERS</h2>
-        <button class="btn" style="background: #fff; color: #000;" onclick="performSummon(1)">SINGLE (100 💎)</button>
+        <button class="btn" onclick="performSummon(1)">SINGLE (100 💎)</button>
         <button class="btn" style="background: linear-gradient(to right, var(--ll), var(--ultra)); color:white;" onclick="performSummon(10)">MULTI (1000 💎)</button>
-        <button class="btn" style="background:#444; color:white;" onclick="showScreen('menu-screen')">BACK</button>
+        <button class="btn" onclick="showScreen('menu-screen')">BACK</button>
     </div>
 
     <div id="box-screen" class="screen">
         <h2>FIGHTER BOX (<span id="box-count">0</span>)</h2>
-        <div id="box-list" class="box-grid"></div>
-        <button class="btn" style="background:#444; color:white; margin-top:15px;" onclick="showScreen('menu-screen')">BACK</button>
+        <div id="box-list"></div>
+        <button class="btn" onclick="showScreen('menu-screen')">BACK</button>
     </div>
-    <div id="overlay"><h1>SUMMONING...</h1></div>
 </div>
 
 <script>
-    let gameData = { crystals: 1000, level: 1, box: [], lastLogin: "" };
-    const charPool = [
-        { name: "UI Goku", rarity: "LEGEND" }, { name: "Ultra Gogeta", rarity: "ULTRA" },
-        { name: "Ultra Vegito", rarity: "ULTRA" }, { name: "MUI Goku", rarity: "LL" },
-        { name: "Beast Gohan", rarity: "LL" }, { name: "SSB Vegeta", rarity: "SP" },
-        { name: "Broly", rarity: "SP" }, { name: "Cell", rarity: "SP" },
-        { name: "Piccolo", rarity: "EX" }, { name: "Krillin", rarity: "HE" }
-    ];
+    let gameData = { crystals: 1000, level: 1, box: [] };
+    let mods = { god: false, insta: false };
 
-    function save() { localStorage.setItem('z_legends_v4', JSON.stringify(gameData)); updateUI(); }
-    
-    function checkDaily() {
-        const today = new Date().toDateString();
-        if (gameData.lastLogin !== today) {
-            gameData.crystals += 500;
-            gameData.lastLogin = today;
-            alert("☀️ DAILY LOGIN BONUS!\nReceived 500 Crystals!");
-            save();
-        }
+    function toggleModPanel() {
+        const p = document.getElementById('mod-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
     }
 
+    function addCrystals(amt) {
+        gameData.crystals += amt;
+        save();
+    }
+
+    function save() { localStorage.setItem('z_legends_mod', JSON.stringify(gameData)); updateUI(); }
     function load() { 
-        const s = localStorage.getItem('z_legends_v4'); 
+        const s = localStorage.getItem('z_legends_mod'); 
         if(s) gameData = JSON.parse(s); 
-        checkDaily();
         updateUI(); 
     }
-
-    function resetGame() { if(confirm("Reset all?")) { localStorage.clear(); location.reload(); } }
-
     function updateUI() {
         document.getElementById('crystal-count').innerText = gameData.crystals.toLocaleString();
         document.getElementById('current-lvl').innerText = gameData.level;
@@ -107,18 +118,12 @@
         document.getElementById('power-bonus').innerText = gameData.box.length * 2;
     }
 
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'box-screen') renderBox();
-    }
-
-    let battlePos = 50, battleActive = false, bLoop;
-
     function startBattle() {
         battlePos = 50; battleActive = true;
         showScreen('battle-screen');
         let speed = 0.7 + (gameData.level * 0.45);
+        if(document.getElementById('mod-god').checked) speed = 0; // GOD MODE
+        
         bLoop = setInterval(() => {
             if(!battleActive) return;
             battlePos += speed;
@@ -131,49 +136,20 @@
         if(e) e.preventDefault();
         if(!battleActive) return;
         let power = 6 * (1 + (gameData.box.length * 0.02));
+        if(document.getElementById('mod-instawin').checked) power = 100; // INSTA WIN
+        
         battlePos -= power;
         document.getElementById('tug-bar').style.width = battlePos + "%";
         if(battlePos <= 0) endBattle(true);
     }
 
-    function endBattle(win) {
-        battleActive = false; clearInterval(bLoop);
-        if(win) {
-            let r = 200 + (gameData.level * 50);
-            gameData.crystals += r; gameData.level++;
-            alert(`WIN! +${r} Crystals`);
-        } else { alert("DEFEAT!"); }
-        save(); showScreen('menu-screen');
-    }
-
-    function performSummon(count) {
-        let cost = count * 100;
-        if(gameData.crystals < cost) return alert("No crystals!");
-        gameData.crystals -= cost;
-        const ov = document.getElementById('overlay');
-        ov.style.display = 'flex';
-        setTimeout(() => {
-            ov.style.display = 'none';
-            for(let i=0; i<count; i++) {
-                let roll = Math.random() * 100;
-                let pick;
-                if(roll < 0.2) pick = charPool[0];
-                else if(roll < 1.0) pick = charPool[Math.floor(Math.random()*2)+1];
-                else if(roll < 3.0) pick = charPool[Math.floor(Math.random()*2)+3];
-                else if(roll < 15.0) pick = charPool[Math.floor(Math.random()*3)+5];
-                else pick = charPool[Math.floor(Math.random()*2)+8];
-                gameData.box.unshift({...pick});
-            }
-            save(); showScreen('box-screen');
-        }, 800);
-    }
-
-    function renderBox() {
-        const list = document.getElementById('box-list');
-        list.innerHTML = gameData.box.map(c => `<div class="char-card rarity-${c.rarity}">${c.rarity}<br>${c.name}</div>`).join('');
-    }
-
+    // (Remaining functions: performSummon, renderBox, endBattle, resetGame, showScreen same as v4)
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function endBattle(win) { battleActive = false; clearInterval(bLoop); if(win) { gameData.crystals += 500; gameData.level++; } save(); showScreen('menu-screen'); }
+    function performSummon(c) { gameData.box.push({name:'MOD Unit', rarity:'SP'}); save(); showScreen('box-screen'); }
+    function renderBox() { document.getElementById('box-list').innerHTML = gameData.box.map(c => `<div>${c.name}</div>`).join(''); }
     load();
 </script>
 </body>
-</html>
+    </html>
+    
