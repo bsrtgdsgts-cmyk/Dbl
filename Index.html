@@ -3,202 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DBL Visual Summon</title>
+    <title>DB Legends Simulator</title>
     <style>
-        :root {
-            --hero: #00d2ff; --ex: #a100ff; --sp: #ffff00;
-            --ll: #ff6a00; --ult: linear-gradient(45deg, #0088ff, #a100ff);
-            --ultimate: #1eff00;
-        }
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; }
+        :root { --hero: #00d2ff; --ex: #a100ff; --sp: #ffff00; --ll: #ff6a00; --ult: #0088ff; --ultimate: #1eff00; }
+        body { background: #000; color: #fff; font-family: 'Arial Black', sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        .screen { width: 100vw; height: 100vh; display: none; position: relative; flex-direction: column; align-items: center; justify-content: center; background-size: cover; background-position: center; }
         
-        /* Stages */
-        #stage { width: 100vw; height: 100vh; position: relative; background: url('https://images.alphacoders.com') center/cover; }
-        .ui { position: absolute; z-index: 100; width: 100%; text-align: center; top: 50%; }
-
-        /* Characters */
-        .actor { width: 60px; height: 100px; position: absolute; bottom: 20%; transition: all 0.5s; border-radius: 10px; }
-        #goku { background: orange; left: 10%; border: 2px solid #fff; box-shadow: 0 0 15px orange; }
-        #broly { background: #228b22; right: 10%; border: 2px solid #0f0; box-shadow: 0 0 15px #0f0; }
+        /* Menu */
+        #menu-screen { display: flex; background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://wallpaperaccess.com'); }
+        .menu-btn { width: 250px; padding: 20px; margin: 10px; font-size: 1.2rem; cursor: pointer; border: 3px solid #fff; border-radius: 10px; font-weight: bold; transition: 0.2s; }
+        .menu-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
         
-        /* Aura */
-        .ssj { box-shadow: 0 0 40px yellow !important; background: gold !important; }
-
-        /* Effects */
-        .beam { height: 40px; position: absolute; top: 50%; display: none; border-radius: 20px; z-index: 50; }
-        #kamehameha { background: cyan; box-shadow: 0 0 30px blue; left: 15%; }
-        #spirit-bomb { background: #bfff00; box-shadow: 0 0 40px green; right: 15%; border-radius: 50%; width: 100px; height: 100px; top: 40%; }
-
-        /* Swipe UI */
-        #swipe-zone { display: none; position: absolute; bottom: 10%; width: 100%; text-align: center; cursor: pointer; z-index: 200; }
-        .swipe-text { font-size: 3rem; font-weight: 900; animation: bounce 0.5s infinite alternate; }
-
-        /* Results */
-        .orb { width: 120px; height: 120px; border-radius: 50%; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 300; }
-        .card { width: 260px; height: 380px; background: rgba(0,0,0,0.9); border: 3px solid #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 400; flex-direction: column; align-items: center; justify-content: center; border-radius: 15px; }
-
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, 0px); } 100% { transform: translate(1px, -2px); } }
+        /* Battle */
+        #battle-screen { background-image: url('https://images.alphacoders.com'); }
+        .fighter-area { display: flex; justify-content: space-around; width: 100%; height: 50%; align-items: center; }
+        .hp-bar { width: 180px; height: 20px; background: #333; border: 2px solid #fff; position: relative; border-radius: 10px; overflow: hidden; }
+        .hp-fill { height: 100%; background: #0f0; transition: width 0.3s; width: 100%; }
+        .actor { width: 90px; height: 130px; border-radius: 10px; margin-top: 10px; }
+        #player-sprite { background: orange; box-shadow: 0 0 20px orange; border: 2px solid #fff; }
+        #enemy-sprite { background: #2e7d32; border: 3px solid #8bc34a; box-shadow: 0 0 15px #0f0; }
+        
+        /* Cards & Ki */
+        #card-hand { position: absolute; bottom: 20px; display: flex; gap: 10px; }
+        .card { width: 80px; height: 120px; border-radius: 8px; border: 2px solid #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; text-align: center; font-weight: bold; }
+        .red { background: #ff1744; } .yellow { background: #ffea00; color: #000; } .blue { background: #2979ff; } .green { background: #00e676; }
+        #ki-bar { position: absolute; bottom: 150px; font-size: 2rem; color: #00e5ff; text-shadow: 0 0 10px #00e5ff; }
+        
+        /* Switch Panel */
+        #switch-panel { position: absolute; left: 15px; top: 100px; display: flex; flex-direction: column; gap: 15px; }
+        .sw-btn { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; background: #444; color: white; font-size: 0.6rem; font-weight: bold; }
+        
+        .reward-popup { color: #ffd700; font-size: 1.5rem; animation: fadeUp 2s forwards; position: absolute; }
+        @keyframes fadeUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-50px); } }
     </style>
 </head>
 <body>
 
-<div id="stage">
-    <div class="ui" id="menu">
-        <button onclick="startSummon()" style="padding: 20px; font-size: 1.5rem; cursor:pointer;">SUMMON (1,000 CC)</button>
+    <!-- MAIN MENU -->
+    <div id="menu-screen" class="screen">
+        <h1 style="font-size: 3.5rem; text-shadow: 0 0 20px red; margin-bottom: 0;">DB LEGENDS</h1>
+        <h2 style="color: #ffd700; margin-bottom: 30px;">Chrono Crystals: <span id="cc-val">2000</span></h2>
+        
+        <div style="background: rgba(0,0,0,0.7); padding: 30px; border-radius: 20px; border: 2px solid #555;">
+            <p style="font-size: 1.2rem;">Story Progress: Level <span id="sl-val">1</span></p>
+            <button class="menu-btn" style="background: #2979ff;" onclick="showSummon()">SUMMON (1000 CC)</button>
+            <button class="menu-btn" style="background: #ff1744;" onclick="startStory()">STORY MODE</button>
+        </div>
     </div>
 
-    <!-- Actors -->
-    <div id="goku" class="actor" style="display:none"></div>
-    <div id="broly" class="actor" style="display:none"></div>
+    <!-- BATTLE MODE -->
+    <div id="battle-screen" class="screen" onmousedown="chargeKi(true)" onmouseup="chargeKi(false)" onmouseleave="chargeKi(false)">
+        <div id="switch-panel"></div>
+        
+        <div class="fighter-area">
+            <div style="text-align: center;">
+                <div class="hp-bar"><div id="p-hp" class="hp-fill"></div></div>
+                <div id="player-sprite" class="actor"></div>
+                <p id="p-name" style="font-size: 1.1rem; margin-top: 5px;">Goku</p>
+            </div>
+            <div style="text-align: center;">
+                <div class="hp-bar"><div id="e-hp" class="hp-fill"></div></div>
+                <div id="enemy-sprite" class="actor"></div>
+                <p id="e-name" style="font-size: 1.1rem; margin-top: 5px;">Saibaman x3</p>
+            </div>
+        </div>
 
-    <!-- Projectiles -->
-    <div id="kamehameha" class="beam"></div>
-    <div id="spirit-bomb" class="beam"></div>
-
-    <!-- Swipe -->
-    <div id="swipe-zone" onclick="resolveClash()">
-        <div id="swipe-label" class="swipe-text">SWIPE UP</div>
+        <div id="ki-bar">KI: <span id="ki-val">100</span></div>
+        <div id="card-hand">
+            <div class="card red" onclick="useCard('red')">STRIKE<br>(25 Ki)</div>
+            <div class="card yellow" onclick="useCard('yellow')">BLAST<br>(25 Ki)</div>
+            <div class="card green" onclick="useCard('green')">BUFF<br>(15 Ki)</div>
+            <div class="card blue" onclick="useCard('blue')">SPECIAL<br>(50 Ki)</div>
+        </div>
     </div>
 
-    <!-- Orbs & Cards -->
-    <div id="orb" class="orb"></div>
-    <div id="card" class="card">
-        <h1 id="rarity-text"></h1>
-        <h2 id="name-text"></h2>
-        <p id="dupe-text"></p>
-        <button onclick="nextCard()" style="padding: 10px 20px;">OK</button>
+<script>
+    let cc = 2000, storyLv = 1, inventory = {"Hero Goku": 1};
+    let ki = 100, chargeTimer, activeChar = null, party = [];
+    let enemyCount = 3, eHp = 10, eMax = 10, eStr = 1;
+
+    // --- SUMMONING ---
+    function showSummon() {
+        if(cc < 1000) return alert("Not enough Chrono Crystals!");
+        cc -= 1000;
+        
+        // Randomly pick a character from the list
+        const pool = ["Hero Goku", "EX Goku SSJ", "SP Goku SSJ3", "LL Goku SSJ4", "Ultra Goku SSB", "MUI Goku"];
+        let result = pool[Math.floor(Math.random() * pool.length)];
+        
+        inventory[result] = (inventory[result] || 0) + 1;
+        if(inventory[result] > 5000) inventory[result] = 5000;
+        
+        alert(`SUMMON RESULT: ${result}!\nTotal Pulls: ${inventory[result]}`);
+        updateUI();
+    }
+
+    // --- STORY MODE ---
+    function startStory() {
+        let chars = Object.keys(inventory).slice(0, 3);
+        party = chars.map(name => ({
+            name, 
+            pulls: inventory[name], 
+            hp: inventory[name] * 2, 
+            max: inventory[name] * 2, 
+            strBonus: 0
+        }));
+        
+        activeChar = party[0];
+        enemyCount = 3; 
+        eMax = 10 + storyLv; 
+        eHp = eMax; 
+        eStr = storyLv;
+        
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('battle-screen').style.display = 'flex';
+        renderSwitches(); 
+        updateBattleUI(); 
+        startBot();
+    }
+
+    function chargeKi(start) {
+        if(start) chargeTimer = setInterval(() => { ki = Math.min(100, ki + 3); updateBattleUI(); }, 100);
+        else clearInterval(chargeTimer);
+    }
+
+    function useCard(type) {
+        let costs = { red: 25, yellow: 25, green: 15, blue: 50 };
+        if(ki < costs[type]) return; 
+        ki -= costs[type];
+
+        if(type === 'red') eHp -= (activeChar.pulls * 5) + activeChar.strBonus; 
+        if(type === 'yellow') eHp -= (activeChar.pulls * 10) + activeChar.strBonus; 
+        if(type === 'blue') eHp -= (activeChar.pulls * 20); 
+        if(type === 'green') { 
+            activeChar.strBonus += 1; 
+            activeChar.hp = Math.min(activeChar.max, activeChar.hp + 2); 
+        }
+
+        checkStatus(); 
+        updateBattleUI();
+    }
+
+    function checkStatus() {
+        if(eHp <= 0) { 
+            enemyCount--; 
+            if(enemyCount > 0) {
+                eHp = eMax; 
+            } else {
+                // VICTORY LOGIC
+                cc += 500; // ADD 500 CC REWARD
+                alert(`VICTORY! You cleared Level ${storyLv} and earned 500 CC!`);
+                storyLv++; 
+                endFight(); 
+            }
+        }
+        if(activeChar.hp <= 0) {
+            let next = party.find(p => p.hp > 0);
+            if(next) {
+                activeChar = next;
+            } else { 
+                alert("DEFEAT! Try pulling more characters to get stronger."); 
+                endFight(); 
+            }
+        }
+    }
+
+    function startBot() {
+        let bot = setInterval(() => {
+            if(document.getElementById('battle-screen').style.display === 'none') return clearInterval(bot);
+            activeChar.hp -= eStr; 
+            checkStatus(); 
+            updateBattleUI();
+        }, 2000);
+    }
+
+    function renderSwitches() {
+        let div = document.getElementById('switch-panel'); div.innerHTML = '';
+        party.forEach(p => {
+            let b = document.createElement('button'); 
+            b.className = 'sw-btn'; 
+            b.innerText = p.name;
+            if(p.hp <= 0) b.style.opacity = "0.3";
+            b.onclick = () => { if(p.hp > 0) activeChar = p; updateBattleUI(); };
+            div.appendChild(b);
+        });
+    }
+
+    function updateBattleUI() {
+        document.getElementById('ki-val').innerText = Math.floor(ki);
+        document.getElementById('p-hp').style.width = (activeChar.hp/activeChar.max * 100) + "%";
+        document.getElementById('e-hp').style.width = (eHp/eMax * 100) + "%";
+        document.getElementById('p-name').innerText = `${activeChar.name} (Lvl ${activeChar.pulls})`;
+        document.getElementById('e-name').innerText = `Saibaman x${enemyCount}`;
+    }
+
+    function updateUI() { 
+        document.getElementById('cc-val').innerText = cc; 
+        document.getElementById('sl-val').innerText = storyLv; 
+    }
+
+    function endFight() { 
+        document.getElementById('battle-screen').style.display = 'none'; 
+        document.getElementById('menu-screen').style.display = 'flex'; 
+        updateUI(); 
+    }
+
+    // Initial Load
+    updateUI();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Legends Summon Simulator</title>
+    <style>
+        :root {
+            --blue: #0088ff; --red: #ff0000; --gold: #ffd700;
+            --hero: #00d2ff; --ex: #a100ff; --sp: #ffff00;
+            --ll: #ff6a00; --ult: linear-gradient(45deg, #0088ff, #a100ff);
+            --ultimate: #1eff00;
+        }
+        body { background: #000; color: #fff; font-family: 'Arial Black', sans-serif; margin: 0; overflow: hidden; text-align: center; }
+        
+        #game-screen { width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; background-size: cover; background-position: center; transition: background 1s; }
+        
+        #ui-overlay { z-index: 10; }
+        .cc-display { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #ffd700; }
+        .btn { padding: 15px 30px; font-size: 1.2rem; background: #222; border: 2px solid #fff; color: #fff; cursor: pointer; border-radius: 5px; }
+        .btn:disabled { opacity: 0.5; }
+
+        #animation-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #swipe-prompt { font-size: 3rem; font-weight: bold; pointer-events: auto; cursor: ns-resize; display: none; animation: pulse 1s infinite; }
+        
+        .char-reveal { width: 250px; height: 350px; border: 4px solid #fff; border-radius: 10px; display: none; flex-direction: column; justify-content: center; background: rgba(0,0,0,0.8); z-index: 20; }
+        .orb { width: 100px; height: 100px; border-radius: 50%; margin: 20px auto; display: none; box-shadow: 0 0 50px rgba(255,255,255,0.5); }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div id="game-screen" style="background-image: url('https://images.alphacoders.com');">
+    <div class="cc-display">Chrono Crystals: <span id="cc-count">2000</span></div>
+    
+    <div id="ui-overlay">
+        <button class="btn" id="summon-btn" onclick="startSummon()">SUMMON (1,000 CC)</button>
+    </div>
+
+    <div id="animation-layer">
+        <h2 id="action-text"></h2>
+        <div id="swipe-prompt">SWIPE UP</div>
+        <div id="orb-display" class="orb"></div>
+        <div id="result-display" class="char-reveal">
+            <h1 id="res-rarity"></h1>
+            <h2 id="res-name"></h2>
+            <p id="res-stats">Damage: +0</p>
+            <button class="btn" onclick="reset()">OK</button>
+        </div>
     </div>
 </div>
 
 <script>
+    let cc = 2000;
     let inventory = {};
-    let multiResults = [];
-    let currentIdx = 0;
-
-    const chars = [
-        { n: "Hero Goku", r: "HERO" },
-        { n: "EX Goku SSJ", r: "EXTREME" },
-        { n: "EX Goku SSJ2", r: "EXTREME" },
-        { n: "SP Goku SSJ3", r: "SPARKING" },
-        { n: "LL Goku SSJ4", r: "LEGENDS LIMITED" },
-        { n: "Ultra Goku SSG", r: "ULTRA" },
-        { n: "Ultra Goku SSB", r: "ULTRA" },
-        { n: "MUI Goku", r: "ULTIMATE" }
+    const maps = ['Namek (Common)', 'Dying Namek (Rare)', 'Glacier (Ultra Rare)'];
+    
+    const characters = [
+        { name: "Goku (Base)", rarity: "HERO", color: "var(--hero)", weight: 60 },
+        { name: "Goku (SSJ)", rarity: "EXTREME", color: "var(--ex)", weight: 20 },
+        { name: "Goku (SSJ2)", rarity: "EXTREME", color: "var(--ex)", weight: 10 },
+        { name: "Goku (SSJ3)", rarity: "SPARKING", color: "var(--sp)", weight: 7 },
+        { name: "Goku (SSJ4)", rarity: "LEGENDS LIMITED", color: "var(--ll)", weight: 2 },
+        { name: "Goku (SSG)", rarity: "ULTRA", color: "var(--ult)", weight: 0.5 },
+        { name: "Goku (SSB)", rarity: "ULTRA", color: "var(--ult)", weight: 0.4 },
+        { name: "Goku (MUI)", rarity: "ULTIMATE", color: "var(--ultimate)", weight: 0.1 }
     ];
 
-    async function startSummon() {
-        document.getElementById('menu').style.display = 'none';
-        const goku = document.getElementById('goku');
-        const broly = document.getElementById('broly');
+    function startSummon() {
+        if (cc < 1000) return alert("Not enough CC!");
+        cc -= 1000;
+        document.getElementById('cc-count').innerText = cc;
+        document.getElementById('ui-overlay').style.display = 'none';
+        document.getElementById('animation-layer').style.display = 'flex';
         
-        // Setup Map
-        let mapRoll = Math.random();
-        if(mapRoll > 0.95) document.getElementById('stage').style.backgroundImage = "url('https://images8.alphacoders.com')"; 
-        
-        // Show Fighters
-        goku.style.display = 'block';
-        broly.style.display = 'block';
-        
-        // SSJ Chance
-        if(Math.random() < 0.25) goku.classList.add('ssj');
-
-        await wait(1000);
-        
-        // Fighting Animation (Moving towards center)
-        goku.style.left = "35%";
-        broly.style.right = "35%";
-        document.getElementById('stage').style.animation = "shake 0.1s infinite";
-        
-        await wait(2000);
-        document.getElementById('stage').style.animation = "none";
-
-        // Swipe Setup
-        const swipe = document.getElementById('swipe-zone');
-        const label = document.getElementById('swipe-label');
-        let sRoll = Math.random();
-        label.style.color = "cyan";
-        if(sRoll < 0.05) label.style.color = "gold";
-        else if(sRoll < 0.35) label.style.color = "red";
-        
-        swipe.style.display = 'block';
+        runSequence();
     }
 
-    async function resolveClash() {
-        document.getElementById('swipe-zone').style.display = 'none';
-        const beam = document.getElementById('kamehameha');
-        const bomb = document.getElementById('spirit-bomb');
+    async function runSequence() {
+        const text = document.getElementById('action-text');
+        const screen = document.getElementById('game-screen');
         
-        beam.style.display = 'block';
-        bomb.style.display = 'block';
+        // 1. Map Selection
+        let randMap = Math.random();
+        let currentMap = maps[0];
+        if (randMap > 0.95) currentMap = maps[2];
+        else if (randMap > 0.70) currentMap = maps[1];
+        text.innerText = "Location: " + currentMap;
         
-        // Clash Animation
-        let win = Math.random() < 0.80;
+        await wait(2000);
         
-        if(win) {
-            beam.style.width = "80vw";
-            bomb.style.opacity = "0";
-            document.getElementById('broly').style.opacity = "0";
+        // 2. SSJ Transformation (25%)
+        let isSSJ = Math.random() < 0.25;
+        text.innerText = isSSJ ? "Goku turns Super Saiyan!" : "Goku faces Broly...";
+        
+        await wait(2000);
+        
+        // 3. Initial Fight (85% win)
+        let winFight = Math.random() < 0.85;
+        text.innerText = "THEY ARE FIGHTING!";
+        await wait(2000);
+        
+        if (winFight) {
+            text.innerText = "Goku fires a Blue Kamehameha!";
         } else {
-            bomb.style.right = "80vw";
-            beam.style.opacity = "0";
-            document.getElementById('goku').style.opacity = "0";
+            text.innerText = "Broly throws a Green Spirit Bomb!";
         }
 
         await wait(2000);
+
+        // 4. Swipe Clash
+        text.innerText = "CLASH!";
+        const swipe = document.getElementById('swipe-prompt');
+        let swipeColor = "var(--blue)";
+        let bonus = 0;
         
-        // Prepare Multi
-        multiResults = Array.from({length: 10}, () => rollChar());
-        currentIdx = 0;
-        showOrb();
+        let swipeRand = Math.random();
+        if (swipeRand < 0.05) { swipeColor = "var(--gold)"; bonus = 10; }
+        else if (swipeRand < 0.35) { swipeColor = "var(--red)"; bonus = 5; }
+        
+        swipe.style.color = swipeColor;
+        swipe.style.display = 'block';
+        swipe.onmousedown = () => finishClash(bonus); // Simplified swipe for desktop
     }
 
-    function showOrb() {
-        const orb = document.getElementById('orb');
-        const c = multiResults[currentIdx];
+    async function finishClash(bonus) {
+        document.getElementById('swipe-prompt').style.display = 'none';
+        const text = document.getElementById('action-text');
+        
+        let winClash = Math.random() < 0.80;
+        if (winClash) {
+            text.innerText = "Kamehameha pierces Broly! EXPLOSION!";
+        } else {
+            text.innerText = "Spirit Bomb overwhelms Goku! EXPLOSION!";
+        }
+
+        await wait(2000);
+        revealCharacter(bonus);
+    }
+
+    function revealCharacter(bonus) {
+        const orb = document.getElementById('orb-display');
+        const char = getRandomCharacter(bonus);
+        
+        document.getElementById('action-text').innerText = "";
         orb.style.display = 'block';
         
-        // Orb Logic
-        let colors = { HERO: "blue", EXTREME: "purple", SPARKING: "yellow", "LEGENDS LIMITED": "orange" };
-        orb.style.background = colors[c.r] || "white";
-        if(c.r === "ULTRA") orb.style.background = "linear-gradient(blue, purple)";
-        if(c.r === "ULTIMATE") {
+        // Set Orb Color
+        if (char.rarity === "HERO") orb.style.background = "blue";
+        if (char.rarity === "EXTREME") orb.style.background = "purple";
+        if (char.rarity === "SPARKING") orb.style.background = "yellow";
+        if (char.rarity === "LEGENDS LIMITED") orb.style.background = "darkorange";
+        if (char.rarity === "ULTRA") orb.style.background = "linear-gradient(to right, blue, purple)";
+        if (char.rarity === "ULTIMATE") {
             orb.style.background = "blue";
-            setTimeout(() => orb.style.background = "green", 500);
+            setTimeout(() => orb.style.background = "green", 1000);
         }
 
         setTimeout(() => {
             orb.style.display = 'none';
-            revealCard(c);
-        }, 1200);
+            showResult(char);
+        }, 2500);
     }
 
-    function revealCard(c) {
-        document.getElementById('card').style.display = 'flex';
-        document.getElementById('rarity-text').innerText = c.r;
-        document.getElementById('name-text').innerText = c.n;
-        inventory[c.n] = (inventory[c.n] || 0) + 1;
-        document.getElementById('dupe-text').innerText = `Dupes: ${inventory[c.n] - 1}`;
+    function getRandomCharacter(bonus) {
+        // Simple weighted random logic
+        let roll = Math.random() * 100 - bonus;
+        if (roll < 0.5) return characters[7]; // Ultimate
+        if (roll < 1.5) return characters[6]; // Ultra SSB
+        if (roll < 3.0) return characters[5]; // Ultra SSG
+        if (roll < 10) return characters[4]; // LL
+        if (roll < 25) return characters[3]; // Sparking
+        if (roll < 50) return characters[1]; // Extreme
+        return characters[0]; // Hero
     }
 
-    function nextCard() {
-        document.getElementById('card').style.display = 'none';
-        currentIdx++;
-        if(currentIdx < 10) showOrb();
-        else location.reload(); // Reset game
+    function showResult(char) {
+        const res = document.getElementById('result-display');
+        res.style.display = 'flex';
+        document.getElementById('res-rarity').innerText = char.rarity;
+        document.getElementById('res-rarity').style.color = char.rarity === "ULTIMATE" ? "green" : "white";
+        document.getElementById('res-name').innerText = char.name;
+        
+        // Dupe Logic
+        inventory[char.name] = (inventory[char.name] || 0) + 1;
+        document.getElementById('res-stats').innerText = `Damage Boost: +${inventory[char.name] - 1}`;
     }
 
-    function rollChar() {
-        let r = Math.random() * 100;
-        if(r < 0.5) return chars[7];
-        if(r < 3) return chars[6];
-        if(r < 10) return chars[4];
-        if(r < 30) return chars[3];
-        return chars[Math.floor(Math.random()*3)];
+    function reset() {
+        document.getElementById('result-display').style.display = 'none';
+        document.getElementById('animation-layer').style.display = 'none';
+        document.getElementById('ui-overlay').style.display = 'block';
     }
 
     function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
 </script>
 
 </body>
-</html>
+    </html>
+    
