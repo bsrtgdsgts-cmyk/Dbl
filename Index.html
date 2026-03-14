@@ -2,27 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z-Warrior: Legends Clone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Z-Warrior Legends: Daily Edition</title>
     <style>
-        :root { --gold: #ffd700; --red: #ff4444; --dark: #0a0a0a; }
-        body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; display: flex; justify-content: center; }
-        
-        #mobile-frame { width: 100%; max-width: 400px; height: 100vh; background: linear-gradient(180deg, #101820, #000); position: relative; border: 1px solid #333; overflow: hidden; }
-        .header { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: space-between; border-bottom: 2px solid var(--gold); font-weight: bold; color: var(--gold); }
-        
-        .screen { display: none; padding: 20px; height: 85%; overflow-y: auto; text-align: center; }
-        .active { display: block; }
-
-        .btn { background: var(--gold); color: black; border: none; padding: 15px; font-weight: bold; cursor: pointer; border-radius: 8px; margin: 10px 0; width: 90%; font-size: 16px; }
-        .btn:active { transform: scale(0.98); }
-        .btn-secondary { background: #333; color: white; font-size: 12px; padding: 8px; }
-
-        .char-card { background: #1a1a1a; border: 1px solid #444; margin: 5px; padding: 8px; border-radius: 5px; display: inline-block; width: 85px; vertical-align: top; }
-        .rarity-SP { border-color: var(--gold); color: var(--gold); }
-        .rarity-EX { border-color: #a0f; color: #a0f; }
-
-        #anim-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: white; display:none; align-items:center; justify-content:center; z-index:100; color:black; font-size:2em; font-weight:900; }
+        :root { --gold: #ffd700; --red: #ff4444; --dark: #050505; --green: #2ecc71; --ultra: #00ffff; --ll: #ff00ff; }
+        body { font-family: 'Segoe UI', sans-serif; background: #000; color: white; margin: 0; display: flex; justify-content: center; touch-action: manipulation; overflow: hidden; }
+        #mobile-frame { width: 100%; max-width: 400px; height: 100vh; background: #101820; position: relative; border: 1px solid #333; display: flex; flex-direction: column; }
+        .header { background: rgba(0,0,0,0.9); padding: 12px; display: flex; justify-content: space-between; border-bottom: 2px solid var(--gold); font-weight: bold; font-size: 13px; }
+        .screen { display: none; padding: 20px; flex: 1; overflow-y: auto; text-align: center; }
+        .active { display: flex; flex-direction: column; }
+        .btn { background: var(--gold); color: black; border: none; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 8px; width: 100%; font-size: 16px; margin: 6px 0; box-shadow: 0 4px 0 #b8860b; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b8860b; }
+        #battle-area { position: relative; height: 260px; background: url('https://wallpaperaccess.com') center/cover; border-radius: 15px; border: 2px solid #444; }
+        .tug-war-container { width: 90%; height: 20px; background: #222; margin: 15px auto; border-radius: 10px; border: 2px solid white; overflow: hidden; position: relative; }
+        #tug-bar { width: 50%; height: 100%; background: linear-gradient(90deg, var(--red) 50%, var(--green) 50%); transition: width 0.05s linear; }
+        .saibaman-img { width: 90px; margin-top: 20px; filter: drop-shadow(0 0 10px var(--green)); animation: bounce 0.6s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+        #click-zone { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 100; cursor: pointer; }
+        .box-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .char-card { background: #1a1a1a; border: 1px solid #444; padding: 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+        .rarity-HE { color: #aaa; } .rarity-EX { color: #a0f; border-color: #a0f; } .rarity-SP { color: var(--gold); border-color: var(--gold); }
+        .rarity-LL { color: var(--ll); border-color: var(--ll); box-shadow: 0 0 8px var(--ll); }
+        .rarity-ULTRA { color: var(--ultra); border-color: var(--ultra); box-shadow: 0 0 12px var(--ultra); background: #000; }
+        .rarity-LEGEND { background: linear-gradient(45deg, gold, white); color: black; box-shadow: 0 0 15px white; }
+        #overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: black; display: none; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
@@ -30,130 +33,147 @@
 <div id="mobile-frame">
     <div class="header">
         <div>💎 <span id="crystal-count">0</span></div>
-        <div onclick="resetGame()" style="cursor:pointer; font-size: 10px; color: grey;">RESET DATA</div>
+        <div>LVL: <span id="current-lvl">1</span></div>
+        <div style="color: var(--green);">💪 +<span id="power-bonus">0</span>%</div>
     </div>
 
-    <!-- Main Menu -->
     <div id="menu-screen" class="screen active">
-        <h1 style="margin-top: 50px; font-style: italic; color: var(--gold);">LEGENDS CLONE</h1>
-        <button class="btn" onclick="showScreen('story-screen')">STORY MODE</button>
-        <button class="btn" onclick="showScreen('summon-screen')">SUMMON BANNERS</button>
-        <button class="btn" onclick="showScreen('box-screen')">CHARACTER BOX (<span id="box-count">0</span>)</button>
+        <h1 style="color: var(--gold); font-style: italic; margin: 20px 0;">Z-LEGENDS v4</h1>
+        <button class="btn" onclick="startBattle()">BATTLE SAIBAMAN</button>
+        <button class="btn" onclick="showScreen('summon-screen')">SUMMON</button>
+        <button class="btn" onclick="showScreen('box-screen')">COLLECTION</button>
+        <button class="btn" style="background:#333; color:white; font-size:11px; box-shadow:none;" onclick="resetGame()">RESET DATA</button>
     </div>
 
-    <!-- Story Screen -->
-    <div id="story-screen" class="screen">
-        <h2>Event: The Training</h2>
-        <p>Defeat the dummy to earn rewards.</p>
-        <button class="btn" onclick="completeMission()">BATTLE! (+100 💎)</button>
-        <button class="btn btn-secondary" onclick="showScreen('menu-screen')">RETURN</button>
+    <div id="battle-screen" class="screen">
+        <div id="battle-area">
+            <div id="click-zone" ontouchstart="playerClick(event)" onmousedown="playerClick(event)"></div>
+            <img src="https://api.dicebear.com" class="saibaman-img">
+            <div class="tug-war-container"><div id="tug-bar"></div></div>
+        </div>
+        <p>TAP FAST!</p>
     </div>
 
-    <!-- Summon Screen -->
     <div id="summon-screen" class="screen">
-        <h2 style="color: var(--gold);">Step-Up Banner</h2>
-        <p>10 Units for 1,000 Crystals</p>
-        <button class="btn" onclick="attemptSummon()">SUMMON x10</button>
-        <button class="btn btn-secondary" onclick="showScreen('menu-screen')">RETURN</button>
+        <h2 style="color: var(--ultra);">BANNERS</h2>
+        <button class="btn" style="background: #fff; color: #000;" onclick="performSummon(1)">SINGLE (100 💎)</button>
+        <button class="btn" style="background: linear-gradient(to right, var(--ll), var(--ultra)); color:white;" onclick="performSummon(10)">MULTI (1000 💎)</button>
+        <button class="btn" style="background:#444; color:white;" onclick="showScreen('menu-screen')">BACK</button>
     </div>
 
-    <!-- Character Box -->
     <div id="box-screen" class="screen">
-        <h2>Your Team</h2>
-        <div id="box-list"></div>
-        <button class="btn btn-secondary" onclick="showScreen('menu-screen')">RETURN</button>
+        <h2>FIGHTER BOX (<span id="box-count">0</span>)</h2>
+        <div id="box-list" class="box-grid"></div>
+        <button class="btn" style="background:#444; color:white; margin-top:15px;" onclick="showScreen('menu-screen')">BACK</button>
     </div>
-
-    <div id="anim-overlay">SUMMONING...</div>
+    <div id="overlay"><h1>SUMMONING...</h1></div>
 </div>
 
 <script>
-    // --- CORE DATA & SAVE LOGIC ---
-    let gameData = {
-        crystals: 500,
-        box: []
-    };
-
-    const characterPool = [
-        { name: "Super Goku", rarity: "SP" },
-        { name: "Final Frieza", rarity: "SP" },
-        { name: "Perfect Cell", rarity: "SP" },
-        { name: "Teen Gohan", rarity: "EX" },
-        { name: "Android 18", rarity: "EX" },
-        { name: "Saibaman", rarity: "HE" }
+    let gameData = { crystals: 1000, level: 1, box: [], lastLogin: "" };
+    const charPool = [
+        { name: "UI Goku", rarity: "LEGEND" }, { name: "Ultra Gogeta", rarity: "ULTRA" },
+        { name: "Ultra Vegito", rarity: "ULTRA" }, { name: "MUI Goku", rarity: "LL" },
+        { name: "Beast Gohan", rarity: "LL" }, { name: "SSB Vegeta", rarity: "SP" },
+        { name: "Broly", rarity: "SP" }, { name: "Cell", rarity: "SP" },
+        { name: "Piccolo", rarity: "EX" }, { name: "Krillin", rarity: "HE" }
     ];
 
-    function loadGame() {
-        const saved = localStorage.getItem('db_legends_save');
-        if (saved) {
-            gameData = JSON.parse(saved);
-        }
-        updateUI();
-    }
-
-    function saveGame() {
-        localStorage.setItem('db_legends_save', JSON.stringify(gameData));
-        updateUI();
-    }
-
-    function resetGame() {
-        if(confirm("Delete all progress?")) {
-            localStorage.removeItem('db_legends_save');
-            location.reload();
+    function save() { localStorage.setItem('z_legends_v4', JSON.stringify(gameData)); updateUI(); }
+    
+    function checkDaily() {
+        const today = new Date().toDateString();
+        if (gameData.lastLogin !== today) {
+            gameData.crystals += 500;
+            gameData.lastLogin = today;
+            alert("☀️ DAILY LOGIN BONUS!\nReceived 500 Crystals!");
+            save();
         }
     }
 
-    // --- GAMEPLAY LOGIC ---
+    function load() { 
+        const s = localStorage.getItem('z_legends_v4'); 
+        if(s) gameData = JSON.parse(s); 
+        checkDaily();
+        updateUI(); 
+    }
+
+    function resetGame() { if(confirm("Reset all?")) { localStorage.clear(); location.reload(); } }
+
+    function updateUI() {
+        document.getElementById('crystal-count').innerText = gameData.crystals.toLocaleString();
+        document.getElementById('current-lvl').innerText = gameData.level;
+        document.getElementById('box-count').innerText = gameData.box.length;
+        document.getElementById('power-bonus').innerText = gameData.box.length * 2;
+    }
+
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         if(id === 'box-screen') renderBox();
     }
 
-    function updateUI() {
-        document.getElementById('crystal-count').innerText = gameData.crystals;
-        document.getElementById('box-count').innerText = gameData.box.length;
+    let battlePos = 50, battleActive = false, bLoop;
+
+    function startBattle() {
+        battlePos = 50; battleActive = true;
+        showScreen('battle-screen');
+        let speed = 0.7 + (gameData.level * 0.45);
+        bLoop = setInterval(() => {
+            if(!battleActive) return;
+            battlePos += speed;
+            document.getElementById('tug-bar').style.width = battlePos + "%";
+            if(battlePos >= 100) endBattle(false);
+        }, 100);
     }
 
-    function completeMission() {
-        gameData.crystals += 100;
-        saveGame();
-        alert("Battle Won! Saved progress.");
-        showScreen('menu-screen');
+    function playerClick(e) {
+        if(e) e.preventDefault();
+        if(!battleActive) return;
+        let power = 6 * (1 + (gameData.box.length * 0.02));
+        battlePos -= power;
+        document.getElementById('tug-bar').style.width = battlePos + "%";
+        if(battlePos <= 0) endBattle(true);
     }
 
-    function attemptSummon() {
-        if (gameData.crystals < 1000) return alert("Insufficient Crystals!");
-        
-        gameData.crystals -= 1000;
-        const overlay = document.getElementById('anim-overlay');
-        overlay.style.display = 'flex';
+    function endBattle(win) {
+        battleActive = false; clearInterval(bLoop);
+        if(win) {
+            let r = 200 + (gameData.level * 50);
+            gameData.crystals += r; gameData.level++;
+            alert(`WIN! +${r} Crystals`);
+        } else { alert("DEFEAT!"); }
+        save(); showScreen('menu-screen');
+    }
 
+    function performSummon(count) {
+        let cost = count * 100;
+        if(gameData.crystals < cost) return alert("No crystals!");
+        gameData.crystals -= cost;
+        const ov = document.getElementById('overlay');
+        ov.style.display = 'flex';
         setTimeout(() => {
-            overlay.style.display = 'none';
-            for(let i=0; i<10; i++) {
-                let pick = characterPool[Math.floor(Math.random() * characterPool.length)];
-                gameData.box.push(pick);
+            ov.style.display = 'none';
+            for(let i=0; i<count; i++) {
+                let roll = Math.random() * 100;
+                let pick;
+                if(roll < 0.2) pick = charPool[0];
+                else if(roll < 1.0) pick = charPool[Math.floor(Math.random()*2)+1];
+                else if(roll < 3.0) pick = charPool[Math.floor(Math.random()*2)+3];
+                else if(roll < 15.0) pick = charPool[Math.floor(Math.random()*3)+5];
+                else pick = charPool[Math.floor(Math.random()*2)+8];
+                gameData.box.unshift({...pick});
             }
-            saveGame();
-            showScreen('box-screen');
-        }, 1200);
+            save(); showScreen('box-screen');
+        }, 800);
     }
 
     function renderBox() {
         const list = document.getElementById('box-list');
-        list.innerHTML = gameData.box.map(char => `
-            <div class="char-card rarity-${char.rarity}">
-                <small>${char.rarity}</small><br>
-                <b>${char.name}</b>
-            </div>
-        `).join('');
+        list.innerHTML = gameData.box.map(c => `<div class="char-card rarity-${c.rarity}">${c.rarity}<br>${c.name}</div>`).join('');
     }
 
-    // Initialize
-    loadGame();
+    load();
 </script>
-
 </body>
-      </html>
-      
+</html>
