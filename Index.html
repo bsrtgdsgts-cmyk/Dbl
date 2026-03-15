@@ -3,175 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SNAKE HUB: All Modes</title>
+    <title>Ultimate Snake Hub</title>
     <script src="https://unpkg.com"></script>
     <style>
-        body { background: #000; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        canvas { background: #000; border: 2px solid #333; display: none; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
+        body { background: #000; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        canvas { background: #000; border: 2px solid #333; display: none; box-shadow: 0 0 20px rgba(0,255,0,0.2); }
         
         /* Menu UI */
-        #menu-hub { background: rgba(0,0,0,0.95); padding: 30px; border-radius: 15px; border: 1px solid #444; text-align: center; width: 320px; z-index: 100; }
-        .mode-btn { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        #menu { background: rgba(0,0,0,0.95); padding: 25px; border-radius: 15px; border: 1px solid #444; text-align: center; width: 320px; z-index: 100; }
+        .section-title { font-size: 11px; color: #888; text-transform: uppercase; margin: 15px 0 5px; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+        button { padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .bot-btn { background: #f1c40f; color: #000; }
-        .host-btn { background: #e74c3c; color: #fff; }
-        .join-btn { background: #2ecc71; color: #fff; }
+        .p2p-btn { background: #3498db; color: #fff; }
+        .join-btn { background: #2ecc71; color: #fff; width: 100%; margin-top: 10px; }
         input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #222; color: white; text-align: center; }
 
-        /* Diamond Controls */
-        #controls { position: absolute; bottom: 30px; left: 30px; width: 150px; height: 150px; display: none; grid-template-areas: ". up ." "left . right" ". down ."; gap: 10px; }
-        .btn { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; }
-        #up { grid-area: up; justify-self: center; } #left { grid-area: left; } #right { grid-area: right; } #down { grid-area: down; justify-self: center; }
+        /* Fixed Diamond Controls */
+        #controls { position: absolute; bottom: 40px; right: 40px; width: 160px; height: 160px; display: none; grid-template-areas: ". up ." "left . right" ". down ."; gap: 10px; }
+        .dir-btn { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; }
+        #up { grid-area: up; justify-self: center; } 
+        #left { grid-area: left; align-self: center; } 
+        #right { grid-area: right; align-self: center; } 
+        #down { grid-area: down; justify-self: center; }
         
-        #status-text { font-size: 12px; color: #888; margin-top: 15px; word-wrap: break-word; }
+        #status { font-size: 11px; color: #555; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="menu-hub">
-        <h1 style="color:#2ecc71; letter-spacing:2px;">SNAKE HUB</h1>
-        <button class="mode-btn bot-btn" onclick="initBotSurvival()">VS BOT SURVIVAL (Solo)</button>
-        <hr style="border: 0.5px solid #333; margin: 15px 0;">
-        <button class="mode-btn host-btn" onclick="hostP2P('SURVIVAL')">HOST SURVIVAL (Red/Green)</button>
-        <button class="mode-btn host-btn" style="background:#3498db" onclick="hostP2P('CLASSIC')">HOST CLASSIC (Growth)</button>
-        <input type="text" id="roomIdInput" placeholder="Paste Room ID">
-        <button class="mode-btn join-btn" onclick="joinP2P()">JOIN ROOM</button>
-        <div id="status-text">Peer Network Ready</div>
+    <div id="menu">
+        <h1 style="color:#2ecc71; margin:0;">SNAKE HUB</h1>
+        
+        <div class="section-title">Survival (Hunter vs Prey)</div>
+        <div class="grid">
+            <button class="bot-btn" onclick="start('SURVIVAL', true)">VS BOT</button>
+            <button class="p2p-btn" style="background:#e74c3c" onclick="setupP2P('SURVIVAL')">HOST P2P</button>
+        </div>
+
+        <div class="section-title">Classic (Growth Race)</div>
+        <div class="grid">
+            <button class="bot-btn" onclick="start('CLASSIC', true)">VS BOT</button>
+            <button class="p2p-btn" onclick="setupP2P('CLASSIC')">HOST P2P</button>
+        </div>
+
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+        <input type="text" id="roomId" placeholder="Enter ID to Join">
+        <button class="join-btn" onclick="joinP2P()">JOIN MULTIPLAYER</button>
+        <div id="status">P2P Network Ready</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <div id="controls">
-        <div id="up" class="btn" onmousedown="setDir('UP')" ontouchstart="setDir('UP')">▲</div>
-        <div id="left" class="btn" onmousedown="setDir('LEFT')" ontouchstart="setDir('LEFT')">◀</div>
-        <div id="right" class="btn" onmousedown="setDir('RIGHT')" ontouchstart="setDir('RIGHT')">▶</div>
-        <div id="down" class="btn" onmousedown="setDir('DOWN')" ontouchstart="setDir('DOWN')">▼</div>
+        <div id="up" class="dir-btn" onmousedown="setDir('UP')" ontouchstart="setDir('UP')">▲</div>
+        <div id="left" class="dir-btn" onmousedown="setDir('LEFT')" ontouchstart="setDir('LEFT')">◀</div>
+        <div id="right" class="dir-btn" onmousedown="setDir('RIGHT')" ontouchstart="setDir('RIGHT')">▶</div>
+        <div id="down" class="dir-btn" onmousedown="setDir('DOWN')" ontouchstart="setDir('DOWN')">▼</div>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const box = 20;
-        canvas.width = 400; canvas.height = 400;
+        const box = 20; canvas.width = 400; canvas.height = 400;
 
-        let peer, conn, gameMode = 'CLASSIC', isHost = false, isBot = false;
-        let mySnake = [{x: 200, y: 300}], enemySnake = [{x: 200, y: 100}];
-        let food = {x: 100, y: 100}, boosts = [], myDir = "UP", botDir = "DOWN", speed = 100;
+        let peer, conn, mode, isBot=false, isHost=false;
+        let mySnake=[{x:200,y:300}], enemySnake=[{x:200,y:100}], boosts=[], food={x:100,y:100};
+        let myDir="UP", enemyDir="DOWN", isBoosted=false;
 
-        // 1. Connection & Initialization
-        function initBotSurvival() {
-            isBot = true; gameMode = 'SURVIVAL';
-            startLoop();
+        function start(m, bot=false) { 
+            mode=m; isBot=bot; 
+            document.getElementById("menu").style.display="none";
+            canvas.style.display="block"; document.getElementById("controls").style.display="grid";
+            if(isHost || isBot) setInterval(spawnItems, 15000); 
+            tick();
         }
 
-        function hostP2P(mode) {
-            gameMode = mode; isHost = true;
-            initPeer();
-        }
-
-        function joinP2P() {
-            const id = document.getElementById("roomIdInput").value;
-            if(!id) return alert("Enter an ID!");
-            isHost = false; initPeer();
-            setTimeout(() => { conn = peer.connect(id); setupConn(); }, 1000);
+        function setupP2P(m) { mode=m; isHost=true; initPeer(); }
+        function joinP2P() { 
+            const id=document.getElementById("roomId").value; if(!id) return;
+            isHost=false; initPeer(); 
+            setTimeout(()=> { conn=peer.connect(id); setupConn(); }, 800);
         }
 
         function initPeer() {
             peer = new Peer();
-            peer.on('open', id => document.getElementById("status-text").innerHTML = "Room ID: <b style='color:white'>"+id+"</b>");
-            peer.on('connection', c => { conn = c; setupConn(); });
+            peer.on('open', id => document.getElementById("status").innerHTML = "Room ID: <b style='color:#fff'>"+id+"</b>");
+            peer.on('connection', c => { conn=c; setupConn(); });
         }
 
         function setupConn() {
-            conn.on('open', () => {
-                if(isHost) conn.send({type:'init', mode: gameMode});
-                startLoop();
-            });
+            conn.on('open', () => { if(isHost) conn.send({type:'init', mode}); start(mode); });
             conn.on('data', d => {
-                if(d.type==='init') gameMode = d.mode;
-                if(d.type==='sync') enemySnake = d.pos;
-                if(d.type==='food') food = d.food;
-                if(d.type==='boosts') boosts = d.boosts;
+                if(d.type==='init') mode=d.mode; if(d.type==='sync') enemySnake=d.pos;
+                if(d.type==='food') food=d.food; if(d.type==='boosts') boosts=d.boosts;
                 if(d.type==='over') { alert(d.msg); location.reload(); }
             });
         }
 
-        function startLoop() {
-            document.getElementById("menu-hub").style.display = "none";
-            canvas.style.display = "block";
-            document.getElementById("controls").style.display = "grid";
-            if(isHost || isBot) setInterval(spawnItems, 30000);
-            gameUpdate();
-        }
-
-        // 2. Logic
-        function setDir(d) { myDir = d; }
+        function setDir(d) { myDir=d; }
 
         function spawnItems() {
-            boosts.push({x: Math.floor(Math.random()*19)*box, y: Math.floor(Math.random()*19)*box});
-            if(gameMode === 'CLASSIC') food = {x: Math.floor(Math.random()*19)*box, y: Math.floor(Math.random()*19)*box};
-            if(conn && isHost) {
-                conn.send({type:'boosts', boosts: boosts});
-                conn.send({type:'food', food: food});
-            }
+            boosts.push({x:Math.floor(Math.random()*19)*box, y:Math.floor(Math.random()*19)*box});
+            if(mode==='CLASSIC') food={x:Math.floor(Math.random()*19)*box, y:Math.floor(Math.random()*19)*box};
+            if(conn && isHost) { conn.send({type:'boosts', boosts}); conn.send({type:'food', food}); }
         }
 
-        function gameUpdate() {
-            let head = {x: mySnake[0].x, y: mySnake[0].y};
+        function tick() {
+            let head = {x:mySnake[0].x, y:mySnake[0].y};
             if(myDir==="UP") head.y-=box; if(myDir==="DOWN") head.y+=box;
             if(myDir==="LEFT") head.x-=box; if(myDir==="RIGHT") head.x+=box;
-            
-            // Screen Wrap
             if(head.x<0) head.x=380; else if(head.x>=400) head.x=0;
             if(head.y<0) head.y=380; else if(head.y>=400) head.y=0;
 
             mySnake.unshift(head);
+            if(mode==='CLASSIC') {
+                if(head.x===food.x && head.y===food.y) { if(isHost||isBot) spawnItems(); } else { mySnake.pop(); }
+            } else { if(mySnake.length>5) mySnake.pop(); }
 
-            // Mode Logic
-            if(gameMode === 'CLASSIC') {
-                if(head.x === food.x && head.y === food.y) { if(isHost) spawnItems(); }
-                else { mySnake.pop(); }
-            } else {
-                if(mySnake.length > 5) mySnake.pop();
-                if(isBot) {
-                    // Bot Pathfinding
-                    let bHead = enemySnake[0];
-                    if(bHead.x < head.x) bHead.x+=box; else if(bHead.x > head.x) bHead.x-=box;
-                    else if(bHead.y < head.y) bHead.y+=box; else if(bHead.y > head.y) bHead.y-=box;
-                    if(bHead.x === head.x && bHead.y === head.y) { alert("Bot Caught You!"); location.reload(); }
-                }
-                if(isHost && enemySnake.length > 0) {
-                    if(head.x === enemySnake[0].x && head.y === enemySnake[0].y) {
-                        conn.send({type:'over', msg:'Red Hunter Wins!'});
-                        alert("You Win!"); location.reload();
-                    }
-                }
+            if(isBot) {
+                let bH = enemySnake[0];
+                if(bH.x < head.x) bH.x+=box; else if(bH.x > head.x) bH.x-=box;
+                else if(bH.y < head.y) bH.y+=box; else if(bH.y > head.y) bH.y-=box;
+                enemySnake=[{x:bH.x, y:bH.y}];
+                if(bH.x===head.x && bH.y===head.y) { alert("Bot Caught You!"); location.reload(); }
             }
 
-            // Speed Boosts
-            let currentSpeed = 100;
-            boosts.forEach((b, i) => {
-                if(head.x === b.x && head.y === b.y) { boosts.splice(i,1); currentSpeed = 50; setTimeout(()=>currentSpeed=100, 5000); }
-            });
+            if(isHost && mode==='SURVIVAL' && head.x===enemySnake[0].x && head.y===enemySnake[0].y) {
+                if(conn) conn.send({type:'over', msg:'Red Hunter Wins!'}); alert("Win!"); location.reload();
+            }
 
-            if(conn) conn.send({type:'sync', pos: mySnake});
+            boosts.forEach((b,i)=>{ if(head.x===b.x && head.y===b.y){ boosts.splice(i,1); isBoosted=true; setTimeout(()=>isBoosted=false,5000); } });
+
+            if(conn) conn.send({type:'sync', pos:mySnake});
             draw();
-            setTimeout(gameUpdate, currentSpeed);
+            setTimeout(tick, isBoosted ? 50 : 100);
         }
 
         function draw() {
-            ctx.fillStyle = "black"; ctx.fillRect(0,0,400,400);
+            ctx.fillStyle="#000"; ctx.fillRect(0,0,400,400);
+            ctx.fillStyle="#f1c40f"; if(mode==='CLASSIC') ctx.fillRect(food.x,food.y,box-2,box-2);
+            ctx.fillStyle="#3498db"; boosts.forEach(b=> { ctx.beginPath(); ctx.arc(b.x+10, b.y+10, 7, 0, Math.PI*2); ctx.fill(); });
             
-            // Items
-            ctx.fillStyle = "#f1c40f"; if(gameMode==='CLASSIC') ctx.fillRect(food.x, food.y, box-2, box-2);
-            ctx.fillStyle = "#3498db"; boosts.forEach(b => { ctx.beginPath(); ctx.arc(b.x+10, b.y+10, 8, 0, Math.PI*2); ctx.fill(); });
-
-            // My Snake (Green in Survival)
-            ctx.fillStyle = (gameMode==='SURVIVAL' && (isHost || isBot)) ? "#e74c3c" : "#2ecc71";
-            mySnake.forEach(s => ctx.fillRect(s.x, s.y, box-2, box-2));
-
-            // Enemy Snake
-            ctx.fillStyle = (gameMode==='SURVIVAL' && (isHost || isBot)) ? "#2ecc71" : "#e74c3c";
-            enemySnake.forEach(s => ctx.fillRect(s.x, s.y, box-2, box-2));
+            // Me
+            ctx.fillStyle = (mode==='SURVIVAL' && (isHost||isBot)) ? "#e74c3c" : "#2ecc71";
+            mySnake.forEach(s=>ctx.fillRect(s.x,s.y,box-2,box-2));
+            // Enemy
+            ctx.fillStyle = (mode==='SURVIVAL' && (isHost||isBot)) ? "#2ecc71" : "#3498db";
+            enemySnake.forEach(s=>ctx.fillRect(s.x,s.y,box-2,box-2));
         }
     </script>
 </body>
