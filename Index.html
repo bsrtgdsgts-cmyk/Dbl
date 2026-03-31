@@ -1,146 +1,114 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Minecraft Mobile</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; touch-action: none; }
-        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; pointer-events: none; font-size: 14px; line-height: 1.5; }
-        #controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-around; align-items: center; padding: 0 20px; box-sizing: border-box; }
-        .joystick { width: 120px; height: 120px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; position: relative; }
-        .stick { width: 50px; height: 50px; background: white; border-radius: 50%; position: absolute; top: 35px; left: 35px; transition: transform 0.1s; }
-        .action-btns { display: flex; gap: 20px; }
-        .btn { width: 80px; height: 80px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid rgba(0,0,0,0.3); box-shadow: 0 4px 0 rgba(0,0,0,0.4); font-size: 16px; }
-        .punch { background: #d32f2f; } .use { background: #1976d2; }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-    </style>
-</head>
-<body>
+  <head>
+    <title>VR Hand-Tracking: Pistol vs Swords</title>
+    <!-- A-Frame Library (Requires internet once to load, then caches) -->
+    <script src="https://aframe.io"></script>
+    <script src="https://unpkg.com"></script>
+  </head>
+  <body>
+    <script>
+      AFRAME.registerComponent('game-logic', {
+        init: function () {
+          this.ammo = 15;
+          this.score = 0;
+          this.isCocked = true;
+          this.enemyHP = 100;
+          this.updateUI();
 
-<div id="ui">
-    🪵 Wood: <span id="logs">0</span> | 📦 Planks: <span id="planks">0</span><br>
-    🛠️ Tool: <span id="tool">Hand</span>
-</div>
+          // Listen for Hand Events
+          this.el.addEventListener('shoot', () => this.fire());
+          this.el.addEventListener('reload', () => { this.ammo = 15; this.updateUI(); });
+          this.el.addEventListener('cock', () => { this.isCocked = true; this.updateUI(); });
+        },
 
-<div id="controls">
-    <div id="joyContainer" class="joystick"><div id="stick" class="stick"></div></div>
-    <div class="action-btns">
-        <div class="btn punch" onclick="mineBlock()">PUNCH</div>
-        <div class="btn use" onclick="smartCraft()">USE</div>
-    </div>
-</div>
+        fire: function() {
+          if (this.ammo > 0 && this.isCocked) {
+            this.ammo--;
+            this.isCocked = false; // Must cock after every shot
+            this.checkHit();
+            this.updateUI();
+          }
+        },
 
-<script src="https://cdnjs.cloudflare.com"></script>
+        updateUI: function() {
+          let status = this.isCocked ? "READY" : "COCK GUN";
+          if (this.ammo === 0) status = "OUT OF AMMO";
+          document.querySelector('#ui').setAttribute('value', 
+            `SCORE: ${this.score}\nAMMO: ${this.ammo}/15\nSTATUS: ${status}`);
+        },
 
-<script>
-    // 1. ENGINE SETUP
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // 2. WORLD & LIGHTS
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-    sun.position.set(10, 20, 10);
-    scene.add(sun);
-
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshLambertMaterial({ color: 0x228B22 }));
-    floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
-
-    const blocks = [];
-    function createBlock(x, z, color, type) {
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color }));
-        mesh.position.set(x, 0.5, z);
-        mesh.userData = { type };
-        scene.add(mesh);
-        blocks.push(mesh);
-    }
-    createBlock(0, -5, 0x5d4037, 'wood');  // Tree
-    createBlock(3, -7, 0x7a7a7a, 'stone'); // Stone
-
-    camera.position.set(0, 1.6, 0);
-
-    // 3. MOBILE JOYSTICK LOGIC
-    let moveDir = { x: 0, z: 0 };
-    const stick = document.getElementById('stick');
-    const joy = document.getElementById('joyContainer');
-
-    joy.addEventListener('touchstart', (e) => handleJoy(e.touches[0]));
-    joy.addEventListener('touchmove', (e) => { e.preventDefault(); handleJoy(e.touches[0]); });
-    joy.addEventListener('touchend', () => {
-        stick.style.transform = `translate(0px, 0px)`;
-        moveDir = { x: 0, z: 0 };
-    });
-
-    function handleJoy(touch) {
-        const rect = joy.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        let dx = touch.clientX - centerX;
-        let dy = touch.clientY - centerY;
-        const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 50);
-        const angle = Math.atan2(dy, dx);
-        
-        stick.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
-        moveDir.x = (Math.cos(angle) * dist) / 500;
-        moveDir.z = (Math.sin(angle) * dist) / 500;
-    }
-
-    // 4. GAME MECHANICS
-    let inv = { logs: 0, planks: 0, sticks: 0, stone: 0 };
-    let currentTool = "Hand";
-
-    function mineBlock() {
-        blocks.forEach(b => {
-            const dist = camera.position.distanceTo(b.position);
-            if (dist < 2.5) {
-                if (b.userData.type === 'wood') inv.logs++;
-                if (b.userData.type === 'stone') {
-                    if (currentTool.includes("Pickaxe")) inv.stone++;
-                    else return alert("Need a Pickaxe!");
-                }
-                b.scale.set(0.1, 0.1, 0.1); 
-                setTimeout(() => b.scale.set(1, 1, 1), 2000); // Respawn
-                updateUI();
-            }
-        });
-    }
-
-    function smartCraft() {
-        if (inv.logs > 0) { inv.logs--; inv.planks += 4; }
-        else if (inv.planks >= 2 && inv.sticks < 4) { inv.planks -= 2; inv.sticks += 4; }
-        else if (inv.planks >= 3 && inv.sticks >= 2 && currentTool === "Hand") {
-            inv.planks -= 3; inv.sticks -= 2; currentTool = "Wood Pickaxe";
+        checkHit: function() {
+          const enemy = document.querySelector('#enemy');
+          this.enemyHP -= 25;
+          document.querySelector('#hp-fill').setAttribute('width', (this.enemyHP / 100) * 1.5);
+          
+          if (this.enemyHP <= 0) {
+            this.score++;
+            this.enemyHP = 100;
+            this.updateUI();
+            // Respawn enemy at random distance
+            enemy.setAttribute('visible', 'false');
+            setTimeout(() => {
+              enemy.setAttribute('visible', 'true');
+              enemy.object3D.position.set((Math.random() - 0.5) * 10, 0, -12);
+              document.querySelector('#hp-fill').setAttribute('width', 1.5);
+            }, 1500);
+          }
         }
-        updateUI();
-    }
+      });
 
-    function updateUI() {
-        document.getElementById('logCount')?.remove(); // Legacy cleanup
-        document.getElementById('logs').innerText = inv.logs;
-        document.getElementById('planks').innerText = inv.planks;
-        document.getElementById('tool').innerText = currentTool;
-    }
+      AFRAME.registerComponent('sword-ai', {
+        tick: function() {
+          const player = document.querySelector('#camera').object3D.position;
+          const enemy = this.el.object3D.position;
+          if (enemy.distanceTo(player) > 1.5) {
+            let dir = new THREE.Vector3().subVectors(player, enemy).normalize();
+            this.el.object3D.position.addScaledVector(dir, 0.03); // Speed
+            this.el.object3D.lookAt(player.x, enemy.y, player.z);
+          }
+        }
+      });
+    </script>
 
-    // 5. RENDER LOOP
-    function animate() {
-        requestAnimationFrame(animate);
-        // Move relative to camera look direction
-        camera.position.x += moveDir.x;
-        camera.position.z += moveDir.z;
-        renderer.render(scene, camera);
-    }
-    animate();
+    <a-scene game-logic>
+      
 
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-</script>
-</body>
+      <!-- Player UI -->
+      
+        <a-text id="ui" position="0 -0.6 -1.2" align="center" color="#00FFF2" width="2.5"></a-text>
+      
+
+      <!-- Hand Tracking: Right Hand (Pistol) -->
+      
+        <a-box color="#111" scale="0.04 0.08 0.18" position="0 0 -0.05">
+           <!-- The Cocking Slide (Click this to cock) -->
+           <a-box color="#333" scale="1.1 0.4 1.1" position="0 0.05 0" 
+                  onclick="document.querySelector('a-scene').emit('cock')"></a-box>
+        </a-box>
+      
+
+      <!-- Hand Tracking: Left Hand -->
+      
+
+      <!-- Hip Ammo Box (Click with either hand to reload) -->
+      <a-box id="mag-source" color="#0000FF" scale="0.15 0.08 0.15" position="-0.4 0.8 -0.1" 
+             onclick="document.querySelector('a-scene').emit('reload')">
+        <a-text value="AMMO" position="0 0.1 0" align="center" scale="0.4 0.4 0.4"></a-text>
+      </a-box>
+
+      <!-- Enemy with Sword -->
+      
+        <a-capsule color="#FF0000" radius="0.4" height="1.6"></a-capsule>
+        <a-box color="#C0C0C0" scale="0.03 0.03 1" position="0.6 0.2 0.4" rotation="30 0 0"></a-box>
+        <!-- HP Bar -->
+        <a-plane color="black" width="1.6" height="0.2" position="0 2.2 0" look-at="#camera">
+          <a-plane id="hp-fill" color="#FF0000" width="1.5" height="0.15" position="0 0 0.01"></a-plane>
+        </a-plane>
+      
+
+      <a-light type="ambient" color="#BBB"></a-light>
+      <a-light type="directional" color="#FFF" intensity="0.6" position="-1 1 1"></a-light>
+    </a-scene>
+  </body>
 </html>
