@@ -1,114 +1,107 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>VR Hand-Tracking: Pistol vs Swords</title>
-    <!-- A-Frame Library (Requires internet once to load, then caches) -->
+    <meta charset="utf-8">
+    <title>VR Pistol Game - Fixed</title>
+    <!-- Updated A-Frame version for better Quest Browser support -->
     <script src="https://aframe.io"></script>
     <script src="https://unpkg.com"></script>
   </head>
-  <body>
+  <body style="margin: 0; overflow: hidden;">
     <script>
-      AFRAME.registerComponent('game-logic', {
+      // Logic for the Gun, Ammo, and Score
+      AFRAME.registerComponent('game-manager', {
         init: function () {
-          this.ammo = 15;
           this.score = 0;
+          this.ammo = 15;
           this.isCocked = true;
           this.enemyHP = 100;
           this.updateUI();
 
-          // Listen for Hand Events
+          // Action listeners
           this.el.addEventListener('shoot', () => this.fire());
           this.el.addEventListener('reload', () => { this.ammo = 15; this.updateUI(); });
           this.el.addEventListener('cock', () => { this.isCocked = true; this.updateUI(); });
         },
-
         fire: function() {
           if (this.ammo > 0 && this.isCocked) {
             this.ammo--;
-            this.isCocked = false; // Must cock after every shot
+            this.isCocked = false;
             this.checkHit();
             this.updateUI();
           }
         },
-
         updateUI: function() {
-          let status = this.isCocked ? "READY" : "COCK GUN";
-          if (this.ammo === 0) status = "OUT OF AMMO";
-          document.querySelector('#ui').setAttribute('value', 
-            `SCORE: ${this.score}\nAMMO: ${this.ammo}/15\nSTATUS: ${status}`);
+          const status = this.ammo === 0 ? "OUT OF AMMO" : (this.isCocked ? "READY" : "COCK GUN");
+          document.querySelector('#ui').setAttribute('value', `SCORE: ${this.score}\nAMMO: ${this.ammo}/15\n${status}`);
         },
-
         checkHit: function() {
-          const enemy = document.querySelector('#enemy');
           this.enemyHP -= 25;
           document.querySelector('#hp-fill').setAttribute('width', (this.enemyHP / 100) * 1.5);
-          
           if (this.enemyHP <= 0) {
             this.score++;
             this.enemyHP = 100;
             this.updateUI();
-            // Respawn enemy at random distance
-            enemy.setAttribute('visible', 'false');
-            setTimeout(() => {
-              enemy.setAttribute('visible', 'true');
-              enemy.object3D.position.set((Math.random() - 0.5) * 10, 0, -12);
-              document.querySelector('#hp-fill').setAttribute('width', 1.5);
-            }, 1500);
+            this.respawn();
           }
+        },
+        respawn: function() {
+          const enemy = document.querySelector('#enemy');
+          enemy.setAttribute('visible', 'false');
+          setTimeout(() => {
+            enemy.setAttribute('visible', 'true');
+            enemy.object3D.position.set((Math.random() - 0.5) * 10, 0, -12);
+            document.querySelector('#hp-fill').setAttribute('width', 1.5);
+          }, 1500);
         }
       });
 
+      // Simple AI Follow Logic
       AFRAME.registerComponent('sword-ai', {
         tick: function() {
           const player = document.querySelector('#camera').object3D.position;
           const enemy = this.el.object3D.position;
           if (enemy.distanceTo(player) > 1.5) {
             let dir = new THREE.Vector3().subVectors(player, enemy).normalize();
-            this.el.object3D.position.addScaledVector(dir, 0.03); // Speed
+            this.el.object3D.position.addScaledVector(dir, 0.03);
             this.el.object3D.lookAt(player.x, enemy.y, player.z);
           }
         }
       });
     </script>
 
-    <a-scene game-logic>
+    <a-scene game-manager renderer="antialias: true; colorManagement: true;">
+      <!-- Environment: Ground and Sky -->
       
 
-      <!-- Player UI -->
+      <!-- Camera and UI -->
       
-        <a-text id="ui" position="0 -0.6 -1.2" align="center" color="#00FFF2" width="2.5"></a-text>
+        <a-text id="ui" position="0 -0.5 -1" align="center" color="#00FFF2" width="2"></a-text>
       
 
-      <!-- Hand Tracking: Right Hand (Pistol) -->
+      <!-- Right Hand: Pistol -->
       
-        <a-box color="#111" scale="0.04 0.08 0.18" position="0 0 -0.05">
-           <!-- The Cocking Slide (Click this to cock) -->
-           <a-box color="#333" scale="1.1 0.4 1.1" position="0 0.05 0" 
-                  onclick="document.querySelector('a-scene').emit('cock')"></a-box>
+        <a-box color="#111" scale="0.05 0.1 0.2" position="0 0 -0.1">
+          <a-box color="#444" scale="1.1 0.4 1.1" position="0 0.06 0" onclick="document.querySelector('a-scene').emit('cock')"></a-box>
         </a-box>
       
 
-      <!-- Hand Tracking: Left Hand -->
+      <!-- Left Hand -->
       
 
-      <!-- Hip Ammo Box (Click with either hand to reload) -->
-      <a-box id="mag-source" color="#0000FF" scale="0.15 0.08 0.15" position="-0.4 0.8 -0.1" 
-             onclick="document.querySelector('a-scene').emit('reload')">
-        <a-text value="AMMO" position="0 0.1 0" align="center" scale="0.4 0.4 0.4"></a-text>
+      <!-- Hip Reload Zone -->
+      <a-box color="blue" scale="0.2 0.1 0.2" position="-0.4 0.7 0" onclick="document.querySelector('a-scene').emit('reload')">
+        <a-text value="RELOAD" position="0 0.12 0" align="center" width="2"></a-text>
       </a-box>
 
-      <!-- Enemy with Sword -->
+      <!-- AI Enemy -->
       
-        <a-capsule color="#FF0000" radius="0.4" height="1.6"></a-capsule>
-        <a-box color="#C0C0C0" scale="0.03 0.03 1" position="0.6 0.2 0.4" rotation="30 0 0"></a-box>
-        <!-- HP Bar -->
+        <a-capsule color="red" radius="0.4" height="1.6"></a-capsule>
+        <a-box color="silver" scale="0.03 0.03 1" position="0.5 0.5 0.5" rotation="45 0 0"></a-box>
         <a-plane color="black" width="1.6" height="0.2" position="0 2.2 0" look-at="#camera">
-          <a-plane id="hp-fill" color="#FF0000" width="1.5" height="0.15" position="0 0 0.01"></a-plane>
+          <a-plane id="hp-fill" color="red" width="1.5" height="0.15" position="0 0 0.01"></a-plane>
         </a-plane>
       
-
-      <a-light type="ambient" color="#BBB"></a-light>
-      <a-light type="directional" color="#FFF" intensity="0.6" position="-1 1 1"></a-light>
     </a-scene>
   </body>
 </html>
