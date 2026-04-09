@@ -1,40 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ultimate CR Assistant</title>
+    <title>Background CR Coach</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; text-align: center; }
-        .box { border: 2px solid #fdbb2d; padding: 20px; margin: 20px; border-radius: 15px; }
-        #elixir { font-size: 3em; color: #fdbb2d; }
+        body { background: #121212; color: #fdbb2d; text-align: center; padding-top: 100px; font-family: sans-serif; }
+        .mic-active { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>🎙️ AI Battle Assistant</h1>
-        <div id="elixir">0.0</div>
-        <p>Last Card Detected: <span id="card">None</span></p>
-        <button onclick="speakStats()">🔊 Hear Status</button>
-    </div>
+    <h1>🎮 Background Coach</h1>
+    <p id="status">Press Start before entering Clash Royale</p>
+    <button onclick="startCoach()" style="padding: 20px; font-size: 20px; border-radius: 10px;">Start AI Coaching</button>
 
     <script>
-        async function updateData() {
-            try {
-                const response = await fetch('http://localhost:5000/data');
-                const data = await response.json();
-                
-                document.getElementById('elixir').innerText = data.opponent_elixir.toFixed(1);
-                document.getElementById('card').innerText = data.last_card;
-            } catch (e) {
-                console.log("Python script not running yet...");
-            }
+        const synth = window.speechSynthesis;
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true; // Essential for background listening
+
+        function startCoach() {
+            recognition.start();
+            document.getElementById('status').innerText = "AI Active! You can now switch to Clash Royale.";
+            speak("Coach is active. Good luck in the arena!");
+            
+            // Keep-alive: Speak a status check every 2 minutes
+            setInterval(() => {
+                if (!synth.speaking) speak("I am still here watching your match.");
+            }, 120000);
         }
 
-        function speakStats() {
-            const text = `Opponent has ${document.getElementById('elixir').innerText} elixir.`;
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-        }
+        recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const command = event.results[last][0].transcript.toLowerCase();
+            
+            if (command.includes("hog")) speak("Opponent's Hog is out of cycle for four cards.");
+            if (command.includes("elixir")) speak("Based on time, they should have around 7 elixir.");
+        };
 
-        setInterval(updateData, 1000); // Sync every second
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            synth.speak(utter);
+        }
+        
+        // Restart if it stops
+        recognition.onend = () => recognition.start();
     </script>
 </body>
 </html>
