@@ -1,107 +1,40 @@
-
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>VR Pistol Game - Fixed</title>
-    <!-- Updated A-Frame version for better Quest Browser support -->
-    <script src="https://aframe.io"></script>
-    <script src="https://unpkg.com"></script>
-  </head>
-  <body style="margin: 0; overflow: hidden;">
+<head>
+    <title>Ultimate CR Assistant</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; text-align: center; }
+        .box { border: 2px solid #fdbb2d; padding: 20px; margin: 20px; border-radius: 15px; }
+        #elixir { font-size: 3em; color: #fdbb2d; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🎙️ AI Battle Assistant</h1>
+        <div id="elixir">0.0</div>
+        <p>Last Card Detected: <span id="card">None</span></p>
+        <button onclick="speakStats()">🔊 Hear Status</button>
+    </div>
+
     <script>
-      // Logic for the Gun, Ammo, and Score
-      AFRAME.registerComponent('game-manager', {
-        init: function () {
-          this.score = 0;
-          this.ammo = 15;
-          this.isCocked = true;
-          this.enemyHP = 100;
-          this.updateUI();
-
-          // Action listeners
-          this.el.addEventListener('shoot', () => this.fire());
-          this.el.addEventListener('reload', () => { this.ammo = 15; this.updateUI(); });
-          this.el.addEventListener('cock', () => { this.isCocked = true; this.updateUI(); });
-        },
-        fire: function() {
-          if (this.ammo > 0 && this.isCocked) {
-            this.ammo--;
-            this.isCocked = false;
-            this.checkHit();
-            this.updateUI();
-          }
-        },
-        updateUI: function() {
-          const status = this.ammo === 0 ? "OUT OF AMMO" : (this.isCocked ? "READY" : "COCK GUN");
-          document.querySelector('#ui').setAttribute('value', `SCORE: ${this.score}\nAMMO: ${this.ammo}/15\n${status}`);
-        },
-        checkHit: function() {
-          this.enemyHP -= 25;
-          document.querySelector('#hp-fill').setAttribute('width', (this.enemyHP / 100) * 1.5);
-          if (this.enemyHP <= 0) {
-            this.score++;
-            this.enemyHP = 100;
-            this.updateUI();
-            this.respawn();
-          }
-        },
-        respawn: function() {
-          const enemy = document.querySelector('#enemy');
-          enemy.setAttribute('visible', 'false');
-          setTimeout(() => {
-            enemy.setAttribute('visible', 'true');
-            enemy.object3D.position.set((Math.random() - 0.5) * 10, 0, -12);
-            document.querySelector('#hp-fill').setAttribute('width', 1.5);
-          }, 1500);
+        async function updateData() {
+            try {
+                const response = await fetch('http://localhost:5000/data');
+                const data = await response.json();
+                
+                document.getElementById('elixir').innerText = data.opponent_elixir.toFixed(1);
+                document.getElementById('card').innerText = data.last_card;
+            } catch (e) {
+                console.log("Python script not running yet...");
+            }
         }
-      });
 
-      // Simple AI Follow Logic
-      AFRAME.registerComponent('sword-ai', {
-        tick: function() {
-          const player = document.querySelector('#camera').object3D.position;
-          const enemy = this.el.object3D.position;
-          if (enemy.distanceTo(player) > 1.5) {
-            let dir = new THREE.Vector3().subVectors(player, enemy).normalize();
-            this.el.object3D.position.addScaledVector(dir, 0.03);
-            this.el.object3D.lookAt(player.x, enemy.y, player.z);
-          }
+        function speakStats() {
+            const text = `Opponent has ${document.getElementById('elixir').innerText} elixir.`;
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
         }
-      });
+
+        setInterval(updateData, 1000); // Sync every second
     </script>
-
-    <a-scene game-manager renderer="antialias: true; colorManagement: true;">
-      <!-- Environment: Ground and Sky -->
-      
-
-      <!-- Camera and UI -->
-      
-        <a-text id="ui" position="0 -0.5 -1" align="center" color="#00FFF2" width="2"></a-text>
-      
-
-      <!-- Right Hand: Pistol -->
-      
-        <a-box color="#111" scale="0.05 0.1 0.2" position="0 0 -0.1">
-          <a-box color="#444" scale="1.1 0.4 1.1" position="0 0.06 0" onclick="document.querySelector('a-scene').emit('cock')"></a-box>
-        </a-box>
-      
-
-      <!-- Left Hand -->
-      
-
-      <!-- Hip Reload Zone -->
-      <a-box color="blue" scale="0.2 0.1 0.2" position="-0.4 0.7 0" onclick="document.querySelector('a-scene').emit('reload')">
-        <a-text value="RELOAD" position="0 0.12 0" align="center" width="2"></a-text>
-      </a-box>
-
-      <!-- AI Enemy -->
-      
-        <a-capsule color="red" radius="0.4" height="1.6"></a-capsule>
-        <a-box color="silver" scale="0.03 0.03 1" position="0.5 0.5 0.5" rotation="45 0 0"></a-box>
-        <a-plane color="black" width="1.6" height="0.2" position="0 2.2 0" look-at="#camera">
-          <a-plane id="hp-fill" color="red" width="1.5" height="0.15" position="0 0 0.01"></a-plane>
-        </a-plane>
-      
-    </a-scene>
-  </body>
+</body>
 </html>
