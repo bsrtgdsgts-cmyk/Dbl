@@ -1,48 +1,116 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Background CR Coach</title>
-    <style>
-        body { background: #121212; color: #fdbb2d; text-align: center; padding-top: 100px; font-family: sans-serif; }
-        .mic-active { color: #2ecc71; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>🎮 Background Coach</h1>
-    <p id="status">Press Start before entering Clash Royale</p>
-    <button onclick="startCoach()" style="padding: 20px; font-size: 20px; border-radius: 10px;">Start AI Coaching</button>
-
-    <script>
-        const synth = window.speechSynthesis;
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = true; // Essential for background listening
-
-        function startCoach() {
-            recognition.start();
-            document.getElementById('status').innerText = "AI Active! You can now switch to Clash Royale.";
-            speak("Coach is active. Good luck in the arena!");
-            
-            // Keep-alive: Speak a status check every 2 minutes
-            setInterval(() => {
-                if (!synth.speaking) speak("I am still here watching your match.");
-            }, 120000);
-        }
-
-        recognition.onresult = (event) => {
-            const last = event.results.length - 1;
-            const command = event.results[last][0].transcript.toLowerCase();
-            
-            if (command.includes("hog")) speak("Opponent's Hog is out of cycle for four cards.");
-            if (command.includes("elixir")) speak("Based on time, they should have around 7 elixir.");
-        };
-
-        function speak(text) {
-            const utter = new SpeechSynthesisUtterance(text);
-            synth.speak(utter);
-        }
+  <head>
+    <meta charset="utf-8">
+    <title>VR Shooter Game</title>
+    <meta name="description" content="VR Shooter Game for Meta Quest">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+  </head>
+  <body>
+    <a-scene physics="gravity: -9.8" vr-mode-ui="enabled: true" embedded>
+      
+      <!-- Sky and Ground -->
+      <a-sky color="#87CEEB"></a-sky>
+      <a-plane rotation="-90 0 0" width="30" height="30" color="#4CAF50" static-body></a-plane>
+      
+      <!-- Player Rig with Controllers -->
+      <a-entity id="rig" position="0 1.6 0">
+        <a-camera wasd-controls-enabled="false" look-controls="pointerLockEnabled: false"></a-camera>
         
-        // Restart if it stops
-        recognition.onend = () => recognition.start();
-    </script>
-</body>
-</html>
+        <!-- Left Hand Controller -->
+        <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcccc"
+                  oculus-touch-controls="hand: left"
+                  raycaster="objects: .shootable" 
+                  line="color: red">
+        </a-entity>
+        
+        <!-- Right Hand Controller -->
+        <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #ffcccc"
+                  oculus-touch-controls="hand: right"
+                  raycaster="objects: .shootable" 
+                  line="color: red">
+        </a-entity>
+      </a-entity>
+      
+      <!-- Gun -->
+      <a-box id="gun" class="shootable" color="#222" depth="0.3" height="0.1" width="0.7"
+             position="0 1.5 -1" dynamic-body
+             grabbable
+             stretchable
+             rotation="0 0 0">
+      </a-box>
+      
+      <!-- Enemy Bot Template -->
+      <a-box id="bot1" class="enemy" color="#f00" depth="0.5" height="1" width="0.5"
+             position="5 0.5 -5"></a-box>
+      <a-box id="bot2" class="enemy" color="#f00" depth="0.5" height="1" width="0.5"
+             position="-5 0.5 -5"></a-box>
+      
+      <!-- Gold -->
+      <a-sphere id="gold" class="gold" color="#FFD700" radius="0.2" position="2 0.2 -2" dynamic-body></a-sphere>
+      
+      <!-- Score Display -->
+      <a-text id="scoreText" value="Gold: 0" position="-1 2 -2" color="#000" width="3"></a-text>
+      
+      <script>
+        let score = 0;
+        const rig = document.querySelector('#rig');
+        const scoreText = document.querySelector('#scoreText');
+        const bots = document.querySelectorAll('.enemy');
+        const gun = document.querySelector('#gun');
+        const gold = document.querySelector('.gold');
+
+        // Shoot logic
+        function shoot() {
+          const gunPos = gun.object3D.position;
+          bots.forEach(bot => {
+            const botPos = bot.object3D.position;
+            const dist = gunPos.distanceTo(botPos);
+            if(dist < 5){
+              bot.parentNode.removeChild(bot);
+              // spawn gold at bot position
+              const newGold = document.createElement('a-sphere');
+              newGold.setAttribute('position', botPos);
+              newGold.setAttribute('color', '#FFD700');
+              newGold.setAttribute('radius', '0.2');
+              newGold.setAttribute('dynamic-body', '');
+              newGold.classList.add('gold');
+              document.querySelector('a-scene').appendChild(newGold);
+            }
+          });
+        }
+
+        // Detect trigger pull (right hand)
+        const rightHand = document.querySelector('#rightHand');
+        rightHand.addEventListener('triggerdown', shoot);
+
+        // Simple enemy movement toward player
+        setInterval(() => {
+          bots.forEach(bot => {
+            if(bot.parentNode){
+              const botPos = bot.object3D.position;
+              const rigPos = rig.object3D.position;
+              const direction = new THREE.Vector3().subVectors(rigPos, botPos).normalize();
+              bot.object3D.position.add(direction.multiplyScalar(0.02));
+            }
+          });
+        }, 50);
+
+        // Gold collection
+        document.querySelector('a-scene').addEventListener('click', (evt) => {
+          document.querySelectorAll('.gold').forEach(g => {
+            const gPos = g.object3D.position;
+            const rigPos = rig.object3D.position;
+            if(gPos.distanceTo(rigPos) < 1){
+              score += 10;
+              scoreText.setAttribute('value', 'Gold: ' + score);
+              g.parentNode.removeChild(g);
+            }
+          });
+        });
+      </script>
+    </a-scene>
+  </body>
+    </html>
