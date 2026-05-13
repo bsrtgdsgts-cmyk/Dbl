@@ -1,116 +1,818 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>VR Shooter Game</title>
-    <meta name="description" content="VR Shooter Game for Meta Quest">
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
-  </head>
-  <body>
-    <a-scene physics="gravity: -9.8" vr-mode-ui="enabled: true" embedded>
-      
-      <!-- Sky and Ground -->
-      <a-sky color="#87CEEB"></a-sky>
-      <a-plane rotation="-90 0 0" width="30" height="30" color="#4CAF50" static-body></a-plane>
-      
-      <!-- Player Rig with Controllers -->
-      <a-entity id="rig" position="0 1.6 0">
-        <a-camera wasd-controls-enabled="false" look-controls="pointerLockEnabled: false"></a-camera>
-        
-        <!-- Left Hand Controller -->
-        <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcccc"
-                  oculus-touch-controls="hand: left"
-                  raycaster="objects: .shootable" 
-                  line="color: red">
-        </a-entity>
-        
-        <!-- Right Hand Controller -->
-        <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #ffcccc"
-                  oculus-touch-controls="hand: right"
-                  raycaster="objects: .shootable" 
-                  line="color: red">
-        </a-entity>
-      </a-entity>
-      
-      <!-- Gun -->
-      <a-box id="gun" class="shootable" color="#222" depth="0.3" height="0.1" width="0.7"
-             position="0 1.5 -1" dynamic-body
-             grabbable
-             stretchable
-             rotation="0 0 0">
-      </a-box>
-      
-      <!-- Enemy Bot Template -->
-      <a-box id="bot1" class="enemy" color="#f00" depth="0.5" height="1" width="0.5"
-             position="5 0.5 -5"></a-box>
-      <a-box id="bot2" class="enemy" color="#f00" depth="0.5" height="1" width="0.5"
-             position="-5 0.5 -5"></a-box>
-      
-      <!-- Gold -->
-      <a-sphere id="gold" class="gold" color="#FFD700" radius="0.2" position="2 0.2 -2" dynamic-body></a-sphere>
-      
-      <!-- Score Display -->
-      <a-text id="scoreText" value="Gold: 0" position="-1 2 -2" color="#000" width="3"></a-text>
-      
-      <script>
-        let score = 0;
-        const rig = document.querySelector('#rig');
-        const scoreText = document.querySelector('#scoreText');
-        const bots = document.querySelectorAll('.enemy');
-        const gun = document.querySelector('#gun');
-        const gold = document.querySelector('.gold');
-
-        // Shoot logic
-        function shoot() {
-          const gunPos = gun.object3D.position;
-          bots.forEach(bot => {
-            const botPos = bot.object3D.position;
-            const dist = gunPos.distanceTo(botPos);
-            if(dist < 5){
-              bot.parentNode.removeChild(bot);
-              // spawn gold at bot position
-              const newGold = document.createElement('a-sphere');
-              newGold.setAttribute('position', botPos);
-              newGold.setAttribute('color', '#FFD700');
-              newGold.setAttribute('radius', '0.2');
-              newGold.setAttribute('dynamic-body', '');
-              newGold.classList.add('gold');
-              document.querySelector('a-scene').appendChild(newGold);
-            }
-          });
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlookQuest Omega - Comprehensive Classroom Arcade Engine</title>
+    <style>
+        :root {
+            --bg-dark-0: #020617;
+            --bg-dark-1: #0f172a;
+            --bg-dark-2: #1e293b;
+            --bg-dark-3: #334155;
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-light: #f8f9fa;
+            --text-muted: #94a3b8;
+            --common: #cbd5e1;
+            --rare: #3a86ff;
+            --epic: #8338ec;
+            --legendary: #ffbe0b;
+            --chroma: #ff0054;
         }
 
-        // Detect trigger pull (right hand)
-        const rightHand = document.querySelector('#rightHand');
-        rightHand.addEventListener('triggerdown', shoot);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
 
-        // Simple enemy movement toward player
-        setInterval(() => {
-          bots.forEach(bot => {
-            if(bot.parentNode){
-              const botPos = bot.object3D.position;
-              const rigPos = rig.object3D.position;
-              const direction = new THREE.Vector3().subVectors(rigPos, botPos).normalize();
-              bot.object3D.position.add(direction.multiplyScalar(0.02));
-            }
-          });
-        }, 50);
+        body {
+            background-color: var(--bg-dark-0);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
 
-        // Gold collection
-        document.querySelector('a-scene').addEventListener('click', (evt) => {
-          document.querySelectorAll('.gold').forEach(g => {
-            const gPos = g.object3D.position;
-            const rigPos = rig.object3D.position;
-            if(gPos.distanceTo(rigPos) < 1){
-              score += 10;
-              scoreText.setAttribute('value', 'Gold: ' + score);
-              g.parentNode.removeChild(g);
-            }
-          });
-        });
-      </script>
-    </a-scene>
-  </body>
-    </html>
+        .global-hud {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-dark-2);
+            padding: 15px 30px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            border: 1px solid var(--bg-dark-3);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .hud-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hud-avatar {
+            font-size: 2.5rem;
+            background: var(--bg-dark-3);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 2px solid var(--primary);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .hud-stats-block {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: var(--bg-dark-1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--bg-dark-3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+
+        .stat-tokens { color: var(--warning); }
+        .stat-cash { color: var(--success); }
+        .stat-xp { color: var(--primary); }
+
+        .main-stage {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-dark-2);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7);
+            border: 1px solid var(--bg-dark-3);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .game-viewport {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .game-viewport.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .menu-card {
+            background: var(--bg-dark-1);
+            border: 2px solid var(--bg-dark-3);
+            border-radius: 16px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px -5px rgba(58, 134, 255, 0.3);
+        }
+
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .menu-card:hover::before {
+            opacity: 1;
+        }
+
+        .menu-card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .menu-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .menu-card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .btn-universal {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(58, 134, 255, 0.4);
+        }
+
+        .btn-universal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(58, 134, 255, 0.6);
+        }
+
+        .btn-universal:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #be123c);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--bg-dark-1);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--bg-dark-3);
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-dark-1);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--bg-dark-3);
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .question-box {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 35px;
+            line-height: 1.4;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .answers-grid { grid-template-columns: 1fr; }
+        }
+
+        .answer-opt {
+            background: var(--bg-dark-1);
+            border: 2px solid var(--bg-dark-3);
+            padding: 22px;
+            border-radius: 16px;
+            text-align: left;
+            color: var(--text-light);
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .answer-opt:hover {
+            transform: translateX(5px);
+            background: var(--bg-dark-3);
+            border-color: var(--primary);
+        }
+
+        .answer-prefix {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .answer-opt.correct {
+            background: rgba(16, 185, 129, 0.2) !important;
+            border-color: var(--success) !important;
+        }
+
+        .answer-opt.wrong {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: var(--danger) !important;
+        }
+
+        .game-panel {
+            background: var(--bg-dark-1);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--bg-dark-3);
+            margin-top: 25px;
+        }
+
+        .factory-conveyor {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 15px;
+            background: var(--bg-dark-0);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            min-height: 120px;
+            align-items: center;
+        }
+
+        .factory-room {
+            background: var(--bg-dark-3);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .room-lvl {
+            position: absolute;
+            top: -8px; right: -8px;
+            background: var(--secondary);
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .crypto-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .crypto-node {
+            background: var(--bg-dark-0);
+            border: 2px solid var(--bg-dark-3);
+            aspect-ratio: 1;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .crypto-node:hover {
+            border-color: var(--secondary);
+            background: rgba(131, 56, 236, 0.1);
+            transform: scale(1.03);
+        }
+
+        .defense-canvas-wrap {
+            position: relative;
+            background: #020617;
+            border-radius: 12px;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+            border: 2px solid var(--bg-dark-3);
+            overflow: hidden;
+        }
+
+        .defense-tower-panel {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .tower-shop-item {
+            background: var(--bg-dark-1);
+            border: 1px solid var(--bg-dark-3);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .tower-shop-item:hover {
+            border-color: var(--primary);
+        }
+
+        .blook-showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .blook-card {
+            background: var(--bg-dark-1);
+            border: 2px solid var(--bg-dark-3);
+            border-radius: 16px;
+            padding: 20px 10px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .blook-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .blook-card.equipped {
+            border-color: var(--primary);
+            background: rgba(58, 134, 255, 0.05);
+        }
+
+        .blook-card-art {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .blook-card-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .blook-card-rarity {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .market-boxes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .box-card {
+            background: linear-gradient(145deg, var(--bg-dark-2), var(--bg-dark-1));
+            border: 2px solid var(--bg-dark-3);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .box-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--warning);
+            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2);
+        }
+
+        .box-art {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .box-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .box-cost {
+            color: var(--warning);
+            font-weight: 800;
+            font-size: 1.1rem;
+            background: rgba(245, 158, 11, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .gacha-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(2, 6, 23, 0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .gacha-box-animation {
+            font-size: 8rem;
+            margin-bottom: 30px;
+            transition: all 0.5s;
+        }
+
+        .gacha-box-animation.shake {
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-10deg); }
+            40% { transform: rotate(15deg); }
+            60% { transform: rotate(-15deg); }
+            80% { transform: rotate(10deg); }
+        }
+
+        .gacha-reward-reveal {
+            display: none;
+            text-align: center;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .reward-blook {
+            font-size: 10rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 25px rgba(255,255,255,0.2));
+        }
+
+        .reward-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .reward-rarity {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .perks-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .perk-node {
+            background: var(--bg-dark-1);
+            border: 2px solid var(--bg-dark-3);
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .perk-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .perk-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .perk-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .perk-tier {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 2rem;
+            font-weight: 800;
+            z-index: 100;
+            display: none;
+            animation: popUp 0.4s ease-out forwards;
+        }
+
+        @keyframes popUp {
+            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: var(--bg-dark-1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 15px 20px;
+            text-align: left;
+        }
+
+        .leaderboard-table th {
+            background: var(--bg-dark-3);
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .leaderboard-table tr {
+            border-bottom: 1px solid var(--bg-dark-3);
+        }
+
+        .leaderboard-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .top-rank {
+            font-weight: 800;
+            color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="global-hud">
+        <div class="hud-profile">
+            <div class="hud-avatar" id="hud-avatar-icon">🎲</div>
+            <div>
+                <div style="font-weight: 800; font-size: 1.1rem;" id="hud-username">QuestExplorer</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);" id="hud-title">Novice Academic</div>
+            </div>
+        </div>
+        <div class="hud-stats-block">
+            <div class="stat-badge stat-tokens">🪙 Tokens: <span id="stat-tokens-val">0</span></div>
+            <div class="stat-badge stat-cash">💵 Cash: <span id="stat-cash-val">0</span></div>
+            <div class="stat-badge stat-xp">🧬 Level <span id="stat-level-val">1</span> (<span id="stat-xp-val">0</span> XP)</div>
+        </div>
+    </div>
+
+    <div class="main-stage">
+        
+        <div class="feedback-overlay" id="fb-overlay"></div>
+
+        <!-- MAIN DASHBOARD -->
+        <div id="view-dashboard" class="game-viewport active">
+            <h1>BlookQuest Arcade</h1>
+            <p class="subtitle">Answer advanced data blocks, build your personal roster of custom assets, and upgrade your abilities tree.</p>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="switchView('view-modes')">
+                    <div class="menu-card-icon">🚀</div>
+                    <div class="menu-card-title">Enter Match Lobbies</div>
+                    <div class="menu-card-desc">Launch multiple modules including Factory, Cryptohack, Tower Defense, and Arena formats.</div>
+                </div>
+                <div class="menu-card" onclick="switchView('view-market')">
+                    <div class="menu-card-icon">🏪</div>
+                    <div class="menu-card-title">Market Procurement</div>
+                    <div class="menu-card-desc">Spend tokens on thematic asset boxes to pull ultra-rare drop-rate configured Blooks.</div>
+                </div>
+                <div class="menu-card" onclick="switchView('view-collection')">
+                    <div class="menu-card-icon">🎴</div>
+                    <div class="menu-card-title">Roster Collection</div>
+                    <div class="menu-card-desc">Manage unlocked variants, assign active indicators, or liquidate inventory duplicates.</div>
+                </div>
+                <div class="menu-card" onclick="switchView('view-perks')">
+                    <div class="menu-card-icon">🧬</div>
+                    <div class="menu-card-title">Upgrade Tree</div>
+                    <div class="menu-card-desc">Permanently amplify core asset generation, unlock answer streak protection, and extend timers.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE SELECTION -->
+        <div id="view-modes" class="game-viewport">
+            <h2>Select Academic Arena Engine</h2>
+            <p class="subtitle">Different modes swap matching reward engines and tactical interfaces.</p>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="initiateMatch('Classic')">
+                    <div class="menu-card-icon">🏆</div>
+                    <div class="menu-card-title">Classic Sprint</div>
+                    <div class="menu-card-desc">Traditional multi-card format. Standard scoring logic and rapid token yield.</div>
+                </div>
+                <div class="menu-card" onclick="initiateMatch('Factory')">
+                    <div class="menu-card-icon">🏭</div>
+                    <div class="menu-card-title">Industrial Factory</div>
+                    <div class="menu-card-desc">Deploy and upgrade self-generating production lines activated by answer performance.</div>
+                </div>
+                <div class="menu-card" onclick="initiateMatch('Crypto')">
+                    <div class="menu-card-icon">💻</div>
+                    <div class="menu-card-title">Crypto Hack Grid</div>
+                    <div class="menu-card-desc">Break through data nodes, calculate passwords, and intercept terminal cache drops.</div>
+                </div>
+                <div class="menu-card" onclick="initiateMatch('Defense')">
+                    <div class="menu-card-icon">🛡️</div>
+                    <div class="menu-card-title">Tower Defense</div>
+                    <div class="menu-card-desc">Spend question revenue to build defensive vectors fighting autonomous path creeps.</div>
+                </div>
+            </div>
+            <button class="btn-universal btn-danger" style="margin-top: 30px;" onclick="switchView('view-dashboard')">⬅ Return To Hub</button>
+        </div>
+
+        <!-- ANSWER MATCH ENGINE RUNTIME -->
+        <div id="view-match-runner" class="game-viewport">
+            <div class="quiz-header">
+                <div>Mode: <span id="match-mode-lbl" style="font-weight: 800; color: var(--primary);">None</span></div>
+                <div>Streak: <span id="match-streak-lbl" style="font-weight: 800; color: var(--warning);">0</span></div>
+                <div>Match Score: <span id="match-score-lbl" style="font-weight: 800; color: var(--success);">0</span></div>
+            </div>
+            <div class="timer-container">
+                <div class="timer-bar" id="match-timer-fill"></div>
+            </div>
+            <div class="question-box" id="match-question-text">Loading question module parameters...</div>
+            <div class="answers-grid">
+                <div class="answer-opt" id="opt-0" onclick="registerUserChoice(0)"><div class="answer-prefix">A</div><span class="text"></span></div>
+                <div class="answer-opt" id="opt-1" onclick="registerUserChoice(1)"><div class="answer-prefix">B</div><span class="text"></span></div>
+                <div class="answer-opt" id="opt-2" onclick="registerUserChoice(2)"><div class="answer-prefix">C</div><span class="text"></span></div>
+                <div class="answer-opt" id="opt-3" onclick="registerUserChoice(3)"><div class="answer-prefix">D</div><span class="text"></span></div>
+            </div>
+
+            <!-- MODE-SPECIFIC SUBPANELS INTERJECTED DYNAMICALLY -->
+            <div id="subpanel-factory" class="game-panel" style="display: none;">
+                <h3>Active Conveyor Rooms</h3>
+                <div class="factory-conveyor" id="conveyor-container"></div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">Answering correctly spawns or elevates continuous manufacturing units.</div>
+            </div>
+
+            <div id="subpanel-crypto" class="game-panel" style="display: none;">
+                <h3>Available Terminal Nodes</h3>
+                <div class="crypto-grid" id="crypto-nodes-container"></div>
+            </div>
+
+            <div id="subpanel-defense" class="game-panel" style="display: none;">
+                <h3>Tactical Grid Simulation</h3>
+                <div class="defense-canvas-wrap">
+                    <canvas id="td-canvas" width="1100" height="400" style="width:100%; height:100%;"></canvas>
+                </div>
+                <div class="defense-tower-panel">
+                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('basic')">🏹 Scout Tower (Cost: 50)</div>
+                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('heavy')">💥 Plasma Cannon (Cost: 120)</div>
+                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('slow')">❄️ Frost Beam (Cost: 90)</div>
+                </div>
+            </div>
+            
+            <button class="btn-universal btn-danger" style="margin-top: 20px;" onclick="terminateMatchSession(true)">🏳️ Abandon Match Frame</button>
+        </div>
+
+        <!-- MARKET PROCUREMENTS -->
+        <div id="view-market" class="game-viewport">
+            <h2>Thematic Asset Procurement Box Matrix</h2>
+            <p class="subtitle">Pulls leverage independent multi-chance probability lookup trees.</p>
+            <div class="market-boxes-container" id="market-boxes-grid"></div>
+            <button class="btn-universal btn-danger" onclick="switchView('view-dashboard')">⬅ Return To Hub</button>
+        </div>
+
+        <!-- ROSTER ROSTER EXTRACTION COLLECTION -->
+        <div id="view-collection" class="game-viewport">
+            <h2>Owned Asset Inventory Roster</h2>
+            <p class="subtitle">Select an asset card to modify your global presentation avatar. Click a duplicate to sell it for partial token liquidations.</p>
