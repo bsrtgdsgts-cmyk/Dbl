@@ -3,816 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlookQuest Omega - Comprehensive Classroom Arcade Engine</title>
+    <title>Blooket Legends: Ultimate Edition</title>
     <style>
         :root {
-            --bg-dark-0: #020617;
-            --bg-dark-1: #0f172a;
-            --bg-dark-2: #1e293b;
-            --bg-dark-3: #334155;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-main: #f8f9fa;
+            --text-muted: #94a3b8;
             --primary: #3a86ff;
             --secondary: #8338ec;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-light: #f8f9fa;
-            --text-muted: #94a3b8;
+            --success: #38b000;
+            --danger: #ff0054;
+            --warning: #ffbe0b;
+            --accent: #00f5d4;
             --common: #cbd5e1;
             --rare: #3a86ff;
             --epic: #8338ec;
             --legendary: #ffbe0b;
-            --chroma: #ff0054;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--bg-dark-0);
-            color: var(--text-light);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        .global-hud {
-            display: flex;
-            width: 100%;
-            max-width: 1200px;
-            background: var(--bg-dark-2);
-            padding: 15px 30px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
-            border: 1px solid var(--bg-dark-3);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .hud-profile {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .hud-avatar {
-            font-size: 2.5rem;
-            background: var(--bg-dark-3);
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            border: 2px solid var(--primary);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .hud-stats-block {
-            display: flex;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .stat-badge {
-            background: var(--bg-dark-1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: 1px solid var(--bg-dark-3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-        }
-
-        .stat-tokens { color: var(--warning); }
-        .stat-cash { color: var(--success); }
-        .stat-xp { color: var(--primary); }
-
-        .main-stage {
-            width: 100%;
-            max-width: 1200px;
-            background: var(--bg-dark-2);
-            border-radius: 24px;
-            padding: 35px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7);
-            border: 1px solid var(--bg-dark-3);
-            position: relative;
-            min-height: 600px;
-        }
-
-        .game-viewport {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out;
-        }
-
-        .game-viewport.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            font-size: 1.1rem;
-        }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .menu-card {
-            background: var(--bg-dark-1);
-            border: 2px solid var(--bg-dark-3);
-            border-radius: 16px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .menu-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 20px -5px rgba(58, 134, 255, 0.3);
-        }
-
-        .menu-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            opacity: 0;
-            transition: opacity 0.25s;
-        }
-
-        .menu-card:hover::before {
-            opacity: 1;
-        }
-
-        .menu-card-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .menu-card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .menu-card-desc {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .btn-universal {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(58, 134, 255, 0.4);
-        }
-
-        .btn-universal:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(58, 134, 255, 0.6);
-        }
-
-        .btn-universal:active {
-            transform: translateY(0);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger), #be123c);
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn-danger:hover {
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
-        }
-
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            background: var(--bg-dark-1);
-            padding: 15px 25px;
-            border-radius: 12px;
-            border: 1px solid var(--bg-dark-3);
-        }
-
-        .timer-container {
-            width: 100%;
-            height: 8px;
-            background: var(--bg-dark-1);
-            border-radius: 4px;
-            margin-bottom: 30px;
-            overflow: hidden;
-            border: 1px solid var(--bg-dark-3);
-        }
-
-        .timer-bar {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
-            width: 100%;
-            transition: width 0.1s linear;
-        }
-
-        .question-box {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 35px;
-            line-height: 1.4;
-        }
-
-        .answers-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .answers-grid { grid-template-columns: 1fr; }
-        }
-
-        .answer-opt {
-            background: var(--bg-dark-1);
-            border: 2px solid var(--bg-dark-3);
-            padding: 22px;
-            border-radius: 16px;
-            text-align: left;
-            color: var(--text-light);
-            font-size: 1.15rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-        }
-
-        .answer-opt:hover {
-            transform: translateX(5px);
-            background: var(--bg-dark-3);
-            border-color: var(--primary);
-        }
-
-        .answer-prefix {
-            width: 32px;
-            height: 32px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 0.9rem;
-        }
-
-        .answer-opt.correct {
-            background: rgba(16, 185, 129, 0.2) !important;
-            border-color: var(--success) !important;
-        }
-
-        .answer-opt.wrong {
-            background: rgba(239, 68, 68, 0.2) !important;
-            border-color: var(--danger) !important;
-        }
-
-        .game-panel {
-            background: var(--bg-dark-1);
-            border-radius: 16px;
-            padding: 25px;
-            border: 1px solid var(--bg-dark-3);
-            margin-top: 25px;
-        }
-
-        .factory-conveyor {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 15px;
-            background: var(--bg-dark-0);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            min-height: 120px;
-            align-items: center;
-        }
-
-        .factory-room {
-            background: var(--bg-dark-3);
-            padding: 15px;
-            border-radius: 10px;
-            min-width: 100px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            position: relative;
-        }
-
-        .room-lvl {
-            position: absolute;
-            top: -8px; right: -8px;
-            background: var(--secondary);
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .crypto-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 25px;
-        }
-
-        .crypto-node {
-            background: var(--bg-dark-0);
-            border: 2px solid var(--bg-dark-3);
-            aspect-ratio: 1;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: all 0.2s;
-        }
-
-        .crypto-node:hover {
-            border-color: var(--secondary);
-            background: rgba(131, 56, 236, 0.1);
-            transform: scale(1.03);
-        }
-
-        .defense-canvas-wrap {
-            position: relative;
-            background: #020617;
-            border-radius: 12px;
-            width: 100%;
-            height: 400px;
-            margin-bottom: 20px;
-            border: 2px solid var(--bg-dark-3);
-            overflow: hidden;
-        }
-
-        .defense-tower-panel {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .tower-shop-item {
-            background: var(--bg-dark-1);
-            border: 1px solid var(--bg-dark-3);
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .tower-shop-item:hover {
-            border-color: var(--primary);
-        }
-
-        .blook-showcase-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .blook-card {
-            background: var(--bg-dark-1);
-            border: 2px solid var(--bg-dark-3);
-            border-radius: 16px;
-            padding: 20px 10px;
-            text-align: center;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .blook-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
-
-        .blook-card.equipped {
-            border-color: var(--primary);
-            background: rgba(58, 134, 255, 0.05);
-        }
-
-        .blook-card-art {
-            font-size: 3.5rem;
-            margin-bottom: 12px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-        }
-
-        .blook-card-name {
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 5px;
-        }
-
-        .blook-card-rarity {
-            font-size: 0.75rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .market-boxes-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .box-card {
-            background: linear-gradient(145deg, var(--bg-dark-2), var(--bg-dark-1));
-            border: 2px solid var(--bg-dark-3);
-            border-radius: 20px;
-            padding: 30px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .box-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--warning);
-            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.2);
-        }
-
-        .box-art {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .box-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .box-cost {
-            color: var(--warning);
-            font-weight: 800;
-            font-size: 1.1rem;
-            background: rgba(245, 158, 11, 0.1);
-            padding: 6px 12px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        .gacha-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(2, 6, 23, 0.95);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .gacha-box-animation {
-            font-size: 8rem;
-            margin-bottom: 30px;
-            transition: all 0.5s;
-        }
-
-        .gacha-box-animation.shake {
-            animation: shake 0.5s infinite;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: rotate(0deg); }
-            20% { transform: rotate(-10deg); }
-            40% { transform: rotate(15deg); }
-            60% { transform: rotate(-15deg); }
-            80% { transform: rotate(10deg); }
-        }
-
-        .gacha-reward-reveal {
-            display: none;
-            text-align: center;
-            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes zoomIn {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .reward-blook {
-            font-size: 10rem;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 10px 25px rgba(255,255,255,0.2));
-        }
-
-        .reward-name {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-
-        .reward-rarity {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
-        }
-
-        .perks-layout {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
-            margin-top: 25px;
-        }
-
-        .perk-node {
-            background: var(--bg-dark-1);
-            border: 2px solid var(--bg-dark-3);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .perk-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .perk-info p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.4;
-            margin-bottom: 15px;
-        }
-
-        .perk-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-        }
-
-        .perk-tier {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .feedback-overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            border-radius: 16px;
-            font-size: 2rem;
-            font-weight: 800;
-            z-index: 100;
-            display: none;
-            animation: popUp 0.4s ease-out forwards;
-        }
-
-        @keyframes popUp {
-            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
-            background: var(--bg-dark-1);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .leaderboard-table th, .leaderboard-table td {
-            padding: 15px 20px;
-            text-align: left;
-        }
-
-        .leaderboard-table th {
-            background: var(--bg-dark-3);
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
-
-        .leaderboard-table tr {
-            border-bottom: 1px solid var(--bg-dark-3);
-        }
-
-        .leaderboard-table tr:last-child {
-            border-bottom: none;
-        }
-
-        .leaderboard-table tr:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .top-rank {
-            font-weight: 800;
-            color: var(--warning);
-        }
+            --chroma: #ff007f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+        body { background: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
+        .hud-layer { display: flex; gap: 15px; background: var(--bg-card); padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; width: 100%; max-width: 900px; justify-content: space-between; align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
+        .hud-stat { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 8px; }
+        .token-count { color: var(--warning); }
+        .score-count { color: var(--success); }
+        
+        .app-container { background: var(--bg-card); width: 100%; max-width: 900px; border-radius: 24px; padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); min-height: 500px; }
+        .view-screen { display: none; }
+        .view-screen.active-view { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1 { font-size: 2.8rem; font-weight: 900; background: linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        h2 { font-size: 1.8rem; margin-bottom: 20px; color: #fff; }
+        .subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 1.1rem; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .action-card { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .action-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.06); border-color: var(--primary); box-shadow: 0 8px 20px rgba(58,134,255,0.15); }
+        .action-card h3 { font-size: 1.3rem; margin-bottom: 6px; }
+        .action-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; }
+        
+        .btn-base { padding: 12px 24px; font-size: 1rem; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; gap: 8px; margin: 8px 4px; }
+        .btn-base:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-main); }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        .question-box { font-size: 1.6rem; font-weight: 700; margin-bottom: 30px; line-height: 1.4; }
+        .answers-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .answer-node { padding: 22px; font-size: 1.15rem; font-weight: 600; border-radius: 12px; border: none; color: white; cursor: pointer; text-align: left; transition: transform 0.1s, filter 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .answer-node:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .node-0 { background: var(--danger); }
+        .node-1 { background: var(--primary); }
+        .node-2 { background: var(--warning); color: #000; }
+        .node-3 { background: var(--success); }
+        
+        .feedback-banner { margin-top: 20px; font-size: 1.3rem; font-weight: 700; min-height: 30px; text-align: center; }
+        
+        .market-shelf { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .gacha-box { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .gacha-box:hover { border-color: var(--warning); background: rgba(255,255,255,0.05); transform: scale(1.02); }
+        .box-art { font-size: 3rem; margin-bottom: 8px; }
+        
+        .blook-vault { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 15px; background: rgba(0,0,0,0.15); border-radius: 14px; max-height: 250px; overflow-y: auto; }
+        .vault-card { background: var(--bg-main); border: 2px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; text-align: center; min-width: 85px; position: relative; cursor: pointer; }
+        .vault-card.active-avatar { border-color: var(--accent); background: rgba(0,245,212,0.05); }
+        .vault-card .glyph { font-size: 2rem; }
+        .rarity-lbl { font-size: 0.65rem; text-transform: uppercase; font-weight: 800; margin-top: 4px; }
+        
+        .clr-common { color: var(--common); }
+        .clr-rare { color: var(--rare); }
+        .clr-epic { color: var(--epic); }
+        .clr-legendary { color: var(--warning); }
+        .clr-chroma { color: var(--chroma); font-weight: 900; }
+        
+        .shake-element { animation: shake 0.4s infinite alternate; }
+        @keyframes shake { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+        
+        .hack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        .hack-tile { background: #090d16; border: 2px solid #1e293b; border-radius: 10px; padding: 25px; font-size: 1.8rem; cursor: pointer; text-align: center; transition: all 0.15s ease; }
+        .hack-tile:hover { border-color: var(--accent); background: rgba(0,245,212,0.05); }
+        
+        .perk-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px 20px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
 
-    <div class="global-hud">
-        <div class="hud-profile">
-            <div class="hud-avatar" id="hud-avatar-icon">🎲</div>
-            <div>
-                <div style="font-weight: 800; font-size: 1.1rem;" id="hud-username">QuestExplorer</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);" id="hud-title">Novice Academic</div>
-            </div>
+    <div class="hud-layer">
+        <div style="display:flex; gap:15px;">
+            <div class="hud-stat">Avatar: <span id="hud-avatar">🎲</span></div>
+            <div class="hud-stat">Score/Cash: <span id="hud-score" class="score-count">0</span></div>
         </div>
-        <div class="hud-stats-block">
-            <div class="stat-badge stat-tokens">🪙 Tokens: <span id="stat-tokens-val">0</span></div>
-            <div class="stat-badge stat-cash">💵 Cash: <span id="stat-cash-val">0</span></div>
-            <div class="stat-badge stat-xp">🧬 Level <span id="stat-level-val">1</span> (<span id="stat-xp-val">0</span> XP)</div>
-        </div>
+        <div class="hud-stat">Tokens: <span id="hud-tokens" class="token-count">50</span></div>
     </div>
 
-    <div class="main-stage">
+    <div class="app-container">
         
-        <div class="feedback-overlay" id="fb-overlay"></div>
-
-        <!-- MAIN DASHBOARD -->
-        <div id="view-dashboard" class="game-viewport active">
-            <h1>BlookQuest Arcade</h1>
-            <p class="subtitle">Answer advanced data blocks, build your personal roster of custom assets, and upgrade your abilities tree.</p>
+        <!-- MAIN MENU -->
+        <div id="screen-menu" class="view-screen active-view">
+            <h1>Blooket Legends</h1>
+            <p class="subtitle">Answer questions, rack up tokens, buy rare pack drops, and upgrade your stats.</p>
             <div class="menu-grid">
-                <div class="menu-card" onclick="switchView('view-modes')">
-                    <div class="menu-card-icon">🚀</div>
-                    <div class="menu-card-title">Enter Match Lobbies</div>
-                    <div class="menu-card-desc">Launch multiple modules including Factory, Cryptohack, Tower Defense, and Arena formats.</div>
+                <div class="action-card" onclick="openModeSelect()">
+                    <h3>🎮 Play Game</h3>
+                    <p>Jump into standard quiz grids, multiplier factory rooms, or security cyber hacking runs.</p>
                 </div>
-                <div class="menu-card" onclick="switchView('view-market')">
-                    <div class="menu-card-icon">🏪</div>
-                    <div class="menu-card-title">Market Procurement</div>
-                    <div class="menu-card-desc">Spend tokens on thematic asset boxes to pull ultra-rare drop-rate configured Blooks.</div>
+                <div class="action-card" onclick="switchView('screen-market')">
+                    <h3>🏪 Marketplace</h3>
+                    <p>Spend tokens to pull rare custom badges and expand your structural tier profile.</p>
                 </div>
-                <div class="menu-card" onclick="switchView('view-collection')">
-                    <div class="menu-card-icon">🎴</div>
-                    <div class="menu-card-title">Roster Collection</div>
-                    <div class="menu-card-desc">Manage unlocked variants, assign active indicators, or liquidate inventory duplicates.</div>
-                </div>
-                <div class="menu-card" onclick="switchView('view-perks')">
-                    <div class="menu-card-icon">🧬</div>
-                    <div class="menu-card-title">Upgrade Tree</div>
-                    <div class="menu-card-desc">Permanently amplify core asset generation, unlock answer streak protection, and extend timers.</div>
+                <div class="action-card" onclick="switchView('screen-upgrades')">
+                    <h3>⚡ Perks & Upgrades</h3>
+                    <p>Purchase custom permanent abilities, item asset multipliers, and streak recovery passes.</p>
                 </div>
             </div>
         </div>
 
         <!-- MODE SELECTION -->
-        <div id="view-modes" class="game-viewport">
-            <h2>Select Academic Arena Engine</h2>
-            <p class="subtitle">Different modes swap matching reward engines and tactical interfaces.</p>
+        <div id="screen-modes" class="view-screen">
+            <h2>Select Game Mode</h2>
             <div class="menu-grid">
-                <div class="menu-card" onclick="initiateMatch('Classic')">
-                    <div class="menu-card-icon">🏆</div>
-                    <div class="menu-card-title">Classic Sprint</div>
-                    <div class="menu-card-desc">Traditional multi-card format. Standard scoring logic and rapid token yield.</div>
+                <div class="action-card" onclick="initGame('Classic')">
+                    <h3>🏆 Classic Mode</h3>
+                    <p>Standard trivia pacing. Earn stable token baselines and simple score tracking arrays.</p>
                 </div>
-                <div class="menu-card" onclick="initiateMatch('Factory')">
-                    <div class="menu-card-icon">🏭</div>
-                    <div class="menu-card-title">Industrial Factory</div>
-                    <div class="menu-card-desc">Deploy and upgrade self-generating production lines activated by answer performance.</div>
+                <div class="action-card" onclick="initGame('Factory')">
+                    <h3>🏭 Factory Tycoon</h3>
+                    <p>High production mode. Earn 3x score multipliers per correct question block handled.</p>
                 </div>
-                <div class="menu-card" onclick="initiateMatch('Crypto')">
-                    <div class="menu-card-icon">💻</div>
-                    <div class="menu-card-title">Crypto Hack Grid</div>
-                    <div class="menu-card-desc">Break through data nodes, calculate passwords, and intercept terminal cache drops.</div>
-                </div>
-                <div class="menu-card" onclick="initiateMatch('Defense')">
-                    <div class="menu-card-icon">🛡️</div>
-                    <div class="menu-card-title">Tower Defense</div>
-                    <div class="menu-card-desc">Spend question revenue to build defensive vectors fighting autonomous path creeps.</div>
+                <div class="action-card" onclick="initGame('Crypto')">
+                    <h3>⚔️ Crypto Hack</h3>
+                    <p>Cyber logic simulation. Guess the answer then pick locks to steal hidden cache items.</p>
                 </div>
             </div>
-            <button class="btn-universal btn-danger" style="margin-top: 30px;" onclick="switchView('view-dashboard')">⬅ Return To Hub</button>
+            <button class="btn-base btn-secondary" style="margin-top:25px;" onclick="switchView('screen-menu')">⬅ Back</button>
         </div>
 
-        <!-- ANSWER MATCH ENGINE RUNTIME -->
-        <div id="view-match-runner" class="game-viewport">
-            <div class="quiz-header">
-                <div>Mode: <span id="match-mode-lbl" style="font-weight: 800; color: var(--primary);">None</span></div>
-                <div>Streak: <span id="match-streak-lbl" style="font-weight: 800; color: var(--warning);">0</span></div>
-                <div>Match Score: <span id="match-score-lbl" style="font-weight: 800; color: var(--success);">0</span></div>
+        <!-- GAMEPLAY MATRIX -->
+        <div id="screen-game" class="view-screen">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 id="game-mode-title" style="color:var(--accent);">Mode</h3>
+                <div>Question: <span id="current-q-index">1</span></div>
             </div>
-            <div class="timer-container">
-                <div class="timer-bar" id="match-timer-fill"></div>
+            <div id="question-text" class="question-box">Question Loading...</div>
+            <div class="answers-layout">
+                <button id="btn-opt0" class="answer-node node-0" onclick="handleAnswer(0)"></button>
+                <button id="btn-opt1" class="answer-node node-1" onclick="handleAnswer(1)"></button>
+                <button id="btn-opt2" class="answer-node node-2" onclick="handleAnswer(2)"></button>
+                <button id="btn-opt3" class="answer-node node-3" onclick="handleAnswer(3)"></button>
             </div>
-            <div class="question-box" id="match-question-text">Loading question module parameters...</div>
-            <div class="answers-grid">
-                <div class="answer-opt" id="opt-0" onclick="registerUserChoice(0)"><div class="answer-prefix">A</div><span class="text"></span></div>
-                <div class="answer-opt" id="opt-1" onclick="registerUserChoice(1)"><div class="answer-prefix">B</div><span class="text"></span></div>
-                <div class="answer-opt" id="opt-2" onclick="registerUserChoice(2)"><div class="answer-prefix">C</div><span class="text"></span></div>
-                <div class="answer-opt" id="opt-3" onclick="registerUserChoice(3)"><div class="answer-prefix">D</div><span class="text"></span></div>
+            <div id="game-feedback" class="feedback-banner"></div>
+            <div style="text-align:right;">
+                <button id="btn-next" class="btn-base btn-primary" style="display:none;" onclick="progressQuestion()">Next ➡</button>
             </div>
+        </div>
 
-            <!-- MODE-SPECIFIC SUBPANELS INTERJECTED DYNAMICALLY -->
-            <div id="subpanel-factory" class="game-panel" style="display: none;">
-                <h3>Active Conveyor Rooms</h3>
-                <div class="factory-conveyor" id="conveyor-container"></div>
-                <div style="font-size: 0.9rem; color: var(--text-muted);">Answering correctly spawns or elevates continuous manufacturing units.</div>
+        <!-- CRYPTO MATRIX INTERFACE -->
+        <div id="screen-hack" class="view-screen">
+            <h2>Matrix Password Override Bypass</h2>
+            <p class="subtitle">Correct answer verified. Pick an encrypted vault node to hack your point bounty multiplier.</p>
+            <div class="hack-grid">
+                <div class="hack-tile" onclick="executeHackTile()">💾</div>
+                <div class="hack-tile" onclick="executeHackTile()">📡</div>
+                <div class="hack-tile" onclick="executeHackTile()">💽</div>
+                <div class="hack-tile" onclick="executeHackTile()">⚡</div>
+                <div class="hack-tile" onclick="executeHackTile()">⚙️</div>
+                <div class="hack-tile" onclick="executeHackTile()">🔑</div>
             </div>
+        </div>
 
-            <div id="subpanel-crypto" class="game-panel" style="display: none;">
-                <h3>Available Terminal Nodes</h3>
-                <div class="crypto-grid" id="crypto-nodes-container"></div>
-            </div>
-
-            <div id="subpanel-defense" class="game-panel" style="display: none;">
-                <h3>Tactical Grid Simulation</h3>
-                <div class="defense-canvas-wrap">
-                    <canvas id="td-canvas" width="1100" height="400" style="width:100%; height:100%;"></canvas>
+        <!-- MARKETPLACE -->
+        <div id="screen-market" class="view-screen">
+            <h2>Blook Asset Storefront</h2>
+            <p class="subtitle">Acquire cosmetic token badges. Each standard drop roll box structure costs 25 tokens.</p>
+            <div class="market-shelf">
+                <div class="gacha-box" onclick="buyGachaBox('Space')">
+                    <div class="box-art">🚀</div>
+                    <h4>Space Box</h4>
+                    <p style="color:var(--warning); font-size:0.85rem; margin-top:4px;">Cost: 25 Tkn</p>
                 </div>
-                <div class="defense-tower-panel">
-                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('basic')">🏹 Scout Tower (Cost: 50)</div>
-                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('heavy')">💥 Plasma Cannon (Cost: 120)</div>
-                    <div class="tower-shop-item" onclick="purchaseDefenseStructure('slow')">❄️ Frost Beam (Cost: 90)</div>
+                <div class="gacha-box" onclick="buyGachaBox('Medieval')">
+                    <div class="box-art">🏰</div>
+                    <h4>Medieval Box</h4>
+                    <p style="color:var(--warning); font-size:0.85rem; margin-top:4px;">Cost: 25 Tkn</p>
                 </div>
             </div>
+            <div id="market-alert" style="text-align:center; font-size:1.2rem; font-weight:700; color:var(--accent); min-height:40px; margin-bottom:15px;"></div>
+            <h3>Your Unlocked Profile Blooks (Click to Equip)</h3>
+            <div id="vault-items" class="blook-vault"></div>
+            <button class="btn-base btn-secondary" style="margin-top:20px;" onclick="switchView('screen-menu')">⬅ Back to Hub</button>
+        </div>
+
+        <!-- PERKS MANAGEMENT -->
+        <div id="screen-upgrades" class="view-screen">
+            <h2>Permanent Stat Tuning Upgrades</h2>
+            <p class="subtitle">Spend points/cash earned from games to upgrade global multipliers permanently.</p>
+            <div class="perks-list">
+                <div class="perk-row">
+                    <div>
+                        <strong>Token Multiplier (Level <span id="lvl-tkn">1</span>)</strong>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Increases custom token yields per accurate card solved.</p>
+                    </div>
+                    <button class="btn-base btn-primary" onclick="buyPerk('tokens')">Buy (<span id="cost-tkn">100</span> Score)</button>
+                </div>
+                <div class="perk-row">
+                    <div>
+                        <strong>Score Multiplier (Level <span id="lvl-scr">1</span>)</strong>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Scales standard payout thresholds across all system profiles.</p>
+                    </div>
+                    <button class="btn-base btn-primary" onclick="buyPerk('scores')">Buy (<span id="cost-scr">150</span> Score)</button>
+                </div>
+            </div>
+            <button class="btn-base btn-secondary" style="margin-top:20px;" onclick="switchView('screen-menu')">⬅ Back to Hub</button>
+        </div>
+
+        <!-- MATCH END SUMMARY -->
+        <div id="screen-summary" class="view-screen">
+            <h2>Match Loop Completed!</h2>
+            <p class="subtitle">The active question deck pool has run completely dry.</p>
+            <div style="background:rgba(0,0,0,0.2); padding:20px; border-radius:12px; margin-bottom:25px;">
+                <p style="margin:10px 0;">Final Points Accumulation: <strong id="sum-points" style="color:var(--success);">0</strong></p>
+                <p style="margin:10px 0;">Current Global Token Cache balance: <strong id="sum-tokens" style="color:var(--warning);">0</strong></p>
+            </div>
+            <button class="btn-base btn-primary" onclick="switchView('screen-menu')">Return to Main Menu</button>
+        </div>
+
+    </div>
+
+    <script>
+        // CORE APPLICATION VARIABLES
+        let tokenCache = 50;
+        let runningScore = 0;
+        let activeBlook = "🎲";
+        let unlockedBlooks = ["🎲"];
+        
+        let matchMode = "Classic";
+        let activeIndex = 0;
+        let deckArray = [];
+
+        // ABILITY STAT MODIFIERS
+        let tokenLvl = 1;
+        let scoreLvl = 1;
+
+        // DATA LAYER FRAMEWORK
+        const questionPool = [
+            {q: "What is the capital of France?", a: ["Berlin", "London", "Paris", "Madrid"], c: 2},
+            {q: "Which planet is known as the Red Planet?", a: ["Earth", "Mars", "Jupiter", "Venus"], c: 1},
+            {q: "What is 8 + 7?", a: ["13", "14", "15", "16"], c: 2},
+            {q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], c: 2},
+            {q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Ruby"], c: 2},
+            {q: "How many legs does an insect have?", a: ["4", "6", "8", "12"], c: 1},
+            {q: "Which element has the symbol 'O'?", a: ["Gold", "Oxygen", "Osmium", "Zinc"], c: 1},
+            {q: "What is the largest mammal?", a: ["Elephant", "Blue Whale", "Giraffe", "Orca"], c: 1},
+            {q: "What is the square root of 81?", a: ["7", "8", "9", "10"], c: 2},
+            {q: "Which country is home to the kangaroo?", a: ["Africa", "Australia", "Peru", "India"], c: 1},
+            {q: "What gas do plants absorb from the air?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], c: 2},
+            {q: "How many days are in a regular year?", a: ["364", "365", "366", "367"], c: 1},
+            {q: "Which primary color makes green when mixed with yellow?", a: ["Red", "Blue", "Black", "Purple"], c: 1},
+            {q: "What is the capital city of Japan?", a: ["Seoul", "Beijing", "Tokyo", "Bangkok"], c: 2},
+            {q: "How many bones are in an adult human?", a: ["106", "206", "306", "406"], c: 1}
+        ];
+
+        const boxManifests = {
+            Space: [
+                {n: "Alien", i: "👽", r: "common", w: 0.50},
+                {n: "Astronaut", i: "🧑‍🚀", r: "rare", w: 0.35},
+                {n: "Rocket Ship", i: "🚀", r: "epic", w: 0.12},
+                {n: "UFO Starship", i: "🛸", r: "legendary", w: 0.03}
+            ],
+            Medieval: [
+                {n: "Castle Guard", i: "🛡️", r: "common", w: 0.50},
+                {n: "Mage Wizard", i: "🧙", r: "rare", w: 0.35},
+                {n: "Fire Dragon", i: "🐉", r: "epic", w: 0.12},
+                {n: "Empire King", i: "👑", r: "legendary", w: 0.03}
+            ]
+        };
+
+        // PROFILE REFRESH & PERSISTENCE
+        function syncHUD() {
+            document.getElementById("hud-tokens").innerText = tokenCache;
+            document.getElementById("hud-score").innerText = runningScore;
+            document.getElementById("hud-avatar").innerText = activeBlook;
             
-            <button class="btn-universal btn-danger" style="margin-top: 20px;" onclick="terminateMatchSession(true)">🏳️ Abandon Match Frame</button>
-        </div>
+            // Sync Perks UI Elements
+            document.getElementById("lvl-tkn").innerText = tokenLvl;
+            document.getElementById("cost-tkn").innerText = tokenLvl * 100;
+            document.getElementById("lvl-scr").innerText = scoreLvl;
+            document.getElementById("cost-scr").innerText = scoreLvl * 150;
+            
+            saveGameProgress();
+        }
 
-        <!-- MARKET PROCUREMENTS -->
-        <div id="view-market" class="game-viewport">
-            <h2>Thematic Asset Procurement Box Matrix</h2>
-            <p class="subtitle">Pulls leverage independent multi-chance probability lookup trees.</p>
-            <div class="market-boxes-container" id="market-boxes-grid"></div>
-            <button class="btn-universal btn-danger" onclick="switchView('view-dashboard')">⬅ Return To Hub</button>
-        </div>
+        function switchView(targetScreen) {
+            document.querySelectorAll(".view-screen").forEach(s => s.classList.remove("active-view"));
+            document.getElementById(targetScreen).classList.add("active-view");
+            if(targetScreen === "screen-market") populateVault();
+        }
 
-        <!-- ROSTER ROSTER EXTRACTION COLLECTION -->
-        <div id="view-collection" class="game-viewport">
-            <h2>Owned Asset Inventory Roster</h2>
-            <p class="subtitle">Select an asset card to modify your global presentation avatar. Click a duplicate to sell it for partial token liquidations.</p>
+        function openModeSelect() {
+            switchView("screen-modes");
+        }
+
+        // ENGINE LOOP CORE INITIALIZER
+        function initGame(selectedMode) {
+            matchMode = selectedMode;
+            activeIndex = 0;
+            deckArray = [...questionPool].sort(() => Math.random() - 0.5);
+            
+            document.getElementById("game-mode-title").innerText = `Game Mode: ${matchMode}`;
+            switchView("screen-game");
+            renderActiveQuestion();
+        }
+
+        function renderActiveQuestion() {
+            if(activeIndex >= deckArray.length) {
+                concludeMatch();
+                return;
+            }
+            
+            document.getElementById("btn-next").style.display = "none";
+            document.getElementById("game-feedback").innerText = "";
+            toggleAnswerNodes(true);
+
+            let currentCard = deckArray[activeIndex];
+            document.getElementById("current-q-index").innerText = activeIndex + 1;
+            document.getElementById("question-text").innerText = currentCard.q;
+
+            for(let i = 0; i < 4; i++) {
+                let node = document.getElementById(`btn-opt${i}`);
+                node.innerText = currentCard.a[i];
+            }
+        }
+
+        function handleAnswer(choiceIdx) {
+            toggleAnswerNodes(false);
+            let currentCard = deckArray[activeIndex];
+            let feedback = document.getElementById("game-feedback");
+
+            if(choiceIdx === currentCard.c) {
+                feedback.style.color = "var(--success)";
+                feedback.innerText = "Correct! Match points and token drop credited.";
+                
+                // MATH BONUSES BASELINES
+                let pointReward = 10 * scoreLvl;
+                let tokenReward = 5 * tokenLvl;
+
+                if (matchMode === "Factory") {
+                    pointReward *= 3; 
+                }
+
+                runningScore += pointReward;
+                tokenCache += tokenReward;
+                syncHUD();
+
+                if(matchMode === "Crypto") {
+                    setTimeout(() => { switchView("screen-hack"); }, 1000);
+                    return;
+                }
+            } else {
+                feedback.style.color = "var(--danger)";
+                feedback.innerText = `Incorrect. Correct choice was: ${currentCard.a[currentCard.c]}`;
+            }
+
+            document.getElementById("btn-next").style.display = "inline-flex";
+        }
+
+        function progressQuestion() {
+            activeIndex++;
+            renderActiveQuestion();
+        }
+
+        function executeHackTile() {
+            let alternativeBonus = 25 * scoreLvl;
+            runningScore += alternativeBonus;
+            syncHUD();
+            alert(`Hacked node bypassed! Stole +${alternativeBonus} score points.`);
+            switchView("screen-game");
+            progressQuestion();
+        }
+
+        function toggleAnswerNodes(status) {
+            for(let i = 0; i < 4; i++) {
+                document.getElementById(`btn-opt${i}`).disabled = !status;
+            }
+        }
+
+        function concludeMatch() {
+            document.getElementById("sum-points").innerText = runningScore;
+            document.getElementById("sum-tokens").innerText = tokenCache;
+            switchView("screen-summary");
+        }
+
+        // MARKET & DROPS PROBABILITY SIMULATOR
+        function buyGachaBox(boxName) {
+            let alertBox = document.getElementById("market-alert");
+            if(tokenCache < 25) {
+                alertBox.style.color = "var(--danger)";
+                alertBox.innerText = "Error: Insufficient token balances available.";
+                return;
+            }
+
+            tokenCache -= 25;
+            let rng = Math.random();
+            let accumulatedChance = 0;
+            let roster = boxManifests[boxName];
+            let wonItem = roster[0];
+
+            for(let element of roster) {
+                accumulatedChance += element.w;
+                if(rng <= accumulatedChance) {
+                    wonItem = element;
+                    break;
+                }
+            }
+
+            if(!unlockedBlooks.includes(wonItem.i)) {
+                unlockedBlooks.push(wonItem.i);
+            }
+
+            alertBox.style.color = "var(--warning)";
+            alertBox.innerHTML = `Acquired: <span style="font-size:1.6rem">${wonItem.i}</span> ${wonItem.n} [<span class="clr-${wonItem.r}">${wonItem.r}</span>]!`;
+            
+            populateVault();
+            syncHUD();
+        }
+
+        function populateVault() {
+            let vault = document.getElementById("vault-items");
+            vault.innerHTML = "";
+            
+            unlockedBlooks.forEach(icon => {
+                let nodeCard = document.createElement("div");
+                nodeCard.className = `vault-card ${activeBlook === icon ? 'active-avatar' : ''}`;
+                nodeCard.innerHTML = `<div class="glyph">${icon}</div>`;
+                
+                nodeCard.onclick = () => {
+                    activeBlook = icon;
+                    syncHUD();
+                    populateVault();
+                };
+                vault.appendChild(nodeCard);
+            });
+        }
+
+        // STAT TUNING MANAGEMENT
+        function buyPerk(type) {
+            if(type === 'tokens') {
+                let cost = tokenLvl * 100;
+                if(runningScore >= cost) {
+                    runningScore -= cost;
+                    tokenLvl++;
+                } else { alert("Insufficient points/cash."); }
+            } else if(type === 'scores') {
+                let cost = scoreLvl * 150;
+                if(runningScore >= cost) {
+                    runningScore -= cost;
+                    scoreLvl++;
+                } else { alert("Insufficient points/cash."); }
+            }
+            syncHUD();
+        }
+
+        // STORAGE PERSISTENCE ENGINE
+        function saveGameProgress() {
+            const saveState = {
+                tokens: tokenCache,
+                score: runningScore,
+                avatar: activeBlook,
+                unlocked: unlockedBlooks,
+                tLvl: tokenLvl,
+                sLvl: scoreLvl
+            };
+            localStorage.setItem("blooket_save_state", JSON.stringify(saveState));
+        }
+
+        function loadGameProgress() {
+            const rawData = localStorage.getItem("blooket_save_state");
+            if(rawData) {
+                const parsed = JSON.parse(rawData);
+                tokenCache = parsed.tokens || 50;
+                runningScore = parsed.score || 0;
+                activeBlook = parsed.avatar || "🎲";
+                unlockedBlooks = parsed.unlocked || ["🎲"];
+                tokenLvl = parsed.tLvl || 1;
+                scoreLvl = parsed.sLvl || 1;
+            }
+            syncHUD();
+        }
+
+        // INITIAL APPLICATION RUNHOURS HOOK
+        window.onload = () => {
+            loadGameProgress();
+        };
+    </script>
+</body>
+</html>
