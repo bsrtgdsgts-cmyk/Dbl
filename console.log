@@ -1,0 +1,22 @@
+const godModeCheckbox = document.getElementById('god-mode');
+const infiniteAmmoCheckbox = document.getElementById('infinite-ammo');
+
+godModeCheckbox.addEventListener('change', (event) => {
+    if (event.target.checked) {
+        // Enable God Mode
+        console.log('God Mode enabled');
+    } else {
+        // Disable God Mode
+        console.log('God Mode disabled');
+    }
+});
+
+infiniteAmmoCheckbox.addEventListener('change', (event) => {
+    if (event.target.checked) {
+        // Enable Infinite Ammo
+        console.log('Infinite Ammo enabled');
+    } else {
+        // Disable Infinite Ammo
+        console.log('Infinite Ammo disabled');
+    }
+});
