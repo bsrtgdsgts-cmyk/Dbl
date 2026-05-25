@@ -1,503 +1,195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blooket Legends: Ultimate Edition</title>
-    <style>
-        :root {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --text-main: #f8f9fa;
-            --text-muted: #94a3b8;
-            --primary: #3a86ff;
-            --secondary: #8338ec;
-            --success: #38b000;
-            --danger: #ff0054;
-            --warning: #ffbe0b;
-            --accent: #00f5d4;
-            --common: #cbd5e1;
-            --rare: #3a86ff;
-            --epic: #8338ec;
-            --legendary: #ffbe0b;
-            --chroma: #ff007f;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
-        body { background: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        
-        .hud-layer { display: flex; gap: 15px; background: var(--bg-card); padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; width: 100%; max-width: 900px; justify-content: space-between; align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
-        .hud-stat { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 8px; }
-        .token-count { color: var(--warning); }
-        .score-count { color: var(--success); }
-        
-        .app-container { background: var(--bg-card); width: 100%; max-width: 900px; border-radius: 24px; padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); min-height: 500px; }
-        .view-screen { display: none; }
-        .view-screen.active-view { display: block; animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        
-        h1 { font-size: 2.8rem; font-weight: 900; background: linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        h2 { font-size: 1.8rem; margin-bottom: 20px; color: #fff; }
-        .subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 1.1rem; }
-        
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .action-card { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
-        .action-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.06); border-color: var(--primary); box-shadow: 0 8px 20px rgba(58,134,255,0.15); }
-        .action-card h3 { font-size: 1.3rem; margin-bottom: 6px; }
-        .action-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; }
-        
-        .btn-base { padding: 12px 24px; font-size: 1rem; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; gap: 8px; margin: 8px 4px; }
-        .btn-base:active { transform: scale(0.98); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: var(--bg-hover); color: var(--text-main); }
-        .btn-danger { background: var(--danger); color: white; }
-        
-        .question-box { font-size: 1.6rem; font-weight: 700; margin-bottom: 30px; line-height: 1.4; }
-        .answers-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .answer-node { padding: 22px; font-size: 1.15rem; font-weight: 600; border-radius: 12px; border: none; color: white; cursor: pointer; text-align: left; transition: transform 0.1s, filter 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .answer-node:hover { filter: brightness(1.1); transform: translateY(-2px); }
-        .node-0 { background: var(--danger); }
-        .node-1 { background: var(--primary); }
-        .node-2 { background: var(--warning); color: #000; }
-        .node-3 { background: var(--success); }
-        
-        .feedback-banner { margin-top: 20px; font-size: 1.3rem; font-weight: 700; min-height: 30px; text-align: center; }
-        
-        .market-shelf { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .gacha-box { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .gacha-box:hover { border-color: var(--warning); background: rgba(255,255,255,0.05); transform: scale(1.02); }
-        .box-art { font-size: 3rem; margin-bottom: 8px; }
-        
-        .blook-vault { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 15px; background: rgba(0,0,0,0.15); border-radius: 14px; max-height: 250px; overflow-y: auto; }
-        .vault-card { background: var(--bg-main); border: 2px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; text-align: center; min-width: 85px; position: relative; cursor: pointer; }
-        .vault-card.active-avatar { border-color: var(--accent); background: rgba(0,245,212,0.05); }
-        .vault-card .glyph { font-size: 2rem; }
-        .rarity-lbl { font-size: 0.65rem; text-transform: uppercase; font-weight: 800; margin-top: 4px; }
-        
-        .clr-common { color: var(--common); }
-        .clr-rare { color: var(--rare); }
-        .clr-epic { color: var(--epic); }
-        .clr-legendary { color: var(--warning); }
-        .clr-chroma { color: var(--chroma); font-weight: 900; }
-        
-        .shake-element { animation: shake 0.4s infinite alternate; }
-        @keyframes shake { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
-        
-        .hack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
-        .hack-tile { background: #090d16; border: 2px solid #1e293b; border-radius: 10px; padding: 25px; font-size: 1.8rem; cursor: pointer; text-align: center; transition: all 0.15s ease; }
-        .hack-tile:hover { border-color: var(--accent); background: rgba(0,245,212,0.05); }
-        
-        .perk-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px 20px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
-    </style>
+<meta charset="UTF-8" />
+<title>Final Voxel Game</title>
+<style>
+body { margin:0; overflow:hidden; font-family:Arial; }
+#ui { position:fixed; top:10px; left:10px; color:white; z-index:10; }
+#hotbar { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:5px; }
+.slot { width:45px;height:45px;background:#222;color:white;display:flex;align-items:center;justify-content:center;border:1px solid #555;white-space:pre;cursor:pointer; }
+</style>
 </head>
 <body>
+<div id="ui">FINAL FIXED VERSION</div>
+<div id="hotbar"></div>
 
-    <div class="hud-layer">
-        <div style="display:flex; gap:15px;">
-            <div class="hud-stat">Avatar: <span id="hud-avatar">🎲</span></div>
-            <div class="hud-stat">Score/Cash: <span id="hud-score" class="score-count">0</span></div>
-        </div>
-        <div class="hud-stat">Tokens: <span id="hud-tokens" class="token-count">50</span></div>
-    </div>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
-    <div class="app-container">
-        
-        <!-- MAIN MENU -->
-        <div id="screen-menu" class="view-screen active-view">
-            <h1>Blooket Legends</h1>
-            <p class="subtitle">Answer questions, rack up tokens, buy rare pack drops, and upgrade your stats.</p>
-            <div class="menu-grid">
-                <div class="action-card" onclick="openModeSelect()">
-                    <h3>🎮 Play Game</h3>
-                    <p>Jump into standard quiz grids, multiplier factory rooms, or security cyber hacking runs.</p>
-                </div>
-                <div class="action-card" onclick="switchView('screen-market')">
-                    <h3>🏪 Marketplace</h3>
-                    <p>Spend tokens to pull rare custom badges and expand your structural tier profile.</p>
-                </div>
-                <div class="action-card" onclick="switchView('screen-upgrades')">
-                    <h3>⚡ Perks & Upgrades</h3>
-                    <p>Purchase custom permanent abilities, item asset multipliers, and streak recovery passes.</p>
-                </div>
-            </div>
-        </div>
+// =====================
+// BASIC SETUP
+// =====================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
 
-        <!-- MODE SELECTION -->
-        <div id="screen-modes" class="view-screen">
-            <h2>Select Game Mode</h2>
-            <div class="menu-grid">
-                <div class="action-card" onclick="initGame('Classic')">
-                    <h3>🏆 Classic Mode</h3>
-                    <p>Standard trivia pacing. Earn stable token baselines and simple score tracking arrays.</p>
-                </div>
-                <div class="action-card" onclick="initGame('Factory')">
-                    <h3>🏭 Factory Tycoon</h3>
-                    <p>High production mode. Earn 3x score multipliers per correct question block handled.</p>
-                </div>
-                <div class="action-card" onclick="initGame('Crypto')">
-                    <h3>⚔️ Crypto Hack</h3>
-                    <p>Cyber logic simulation. Guess the answer then pick locks to steal hidden cache items.</p>
-                </div>
-            </div>
-            <button class="btn-base btn-secondary" style="margin-top:25px;" onclick="switchView('screen-menu')">⬅ Back</button>
-        </div>
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
 
-        <!-- GAMEPLAY MATRIX -->
-        <div id="screen-game" class="view-screen">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 id="game-mode-title" style="color:var(--accent);">Mode</h3>
-                <div>Question: <span id="current-q-index">1</span></div>
-            </div>
-            <div id="question-text" class="question-box">Question Loading...</div>
-            <div class="answers-layout">
-                <button id="btn-opt0" class="answer-node node-0" onclick="handleAnswer(0)"></button>
-                <button id="btn-opt1" class="answer-node node-1" onclick="handleAnswer(1)"></button>
-                <button id="btn-opt2" class="answer-node node-2" onclick="handleAnswer(2)"></button>
-                <button id="btn-opt3" class="answer-node node-3" onclick="handleAnswer(3)"></button>
-            </div>
-            <div id="game-feedback" class="feedback-banner"></div>
-            <div style="text-align:right;">
-                <button id="btn-next" class="btn-base btn-primary" style="display:none;" onclick="progressQuestion()">Next ➡</button>
-            </div>
-        </div>
+const controls = new PointerLockControls(camera, document.body);
+document.body.addEventListener("click", () => controls.lock());
+scene.add(controls.getObject());
 
-        <!-- CRYPTO MATRIX INTERFACE -->
-        <div id="screen-hack" class="view-screen">
-            <h2>Matrix Password Override Bypass</h2>
-            <p class="subtitle">Correct answer verified. Pick an encrypted vault node to hack your point bounty multiplier.</p>
-            <div class="hack-grid">
-                <div class="hack-tile" onclick="executeHackTile()">💾</div>
-                <div class="hack-tile" onclick="executeHackTile()">📡</div>
-                <div class="hack-tile" onclick="executeHackTile()">💽</div>
-                <div class="hack-tile" onclick="executeHackTile()">⚡</div>
-                <div class="hack-tile" onclick="executeHackTile()">⚙️</div>
-                <div class="hack-tile" onclick="executeHackTile()">🔑</div>
-            </div>
-        </div>
+// LIGHT (IMPORTANT)
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-        <!-- MARKETPLACE -->
-        <div id="screen-market" class="view-screen">
-            <h2>Blook Asset Storefront</h2>
-            <p class="subtitle">Acquire cosmetic token badges. Each standard drop roll box structure costs 25 tokens.</p>
-            <div class="market-shelf">
-                <div class="gacha-box" onclick="buyGachaBox('Space')">
-                    <div class="box-art">🚀</div>
-                    <h4>Space Box</h4>
-                    <p style="color:var(--warning); font-size:0.85rem; margin-top:4px;">Cost: 25 Tkn</p>
-                </div>
-                <div class="gacha-box" onclick="buyGachaBox('Medieval')">
-                    <div class="box-art">🏰</div>
-                    <h4>Medieval Box</h4>
-                    <p style="color:var(--warning); font-size:0.85rem; margin-top:4px;">Cost: 25 Tkn</p>
-                </div>
-            </div>
-            <div id="market-alert" style="text-align:center; font-size:1.2rem; font-weight:700; color:var(--accent); min-height:40px; margin-bottom:15px;"></div>
-            <h3>Your Unlocked Profile Blooks (Click to Equip)</h3>
-            <div id="vault-items" class="blook-vault"></div>
-            <button class="btn-base btn-secondary" style="margin-top:20px;" onclick="switchView('screen-menu')">⬅ Back to Hub</button>
-        </div>
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(20, 40, 20);
+scene.add(sun);
 
-        <!-- PERKS MANAGEMENT -->
-        <div id="screen-upgrades" class="view-screen">
-            <h2>Permanent Stat Tuning Upgrades</h2>
-            <p class="subtitle">Spend points/cash earned from games to upgrade global multipliers permanently.</p>
-            <div class="perks-list">
-                <div class="perk-row">
-                    <div>
-                        <strong>Token Multiplier (Level <span id="lvl-tkn">1</span>)</strong>
-                        <p style="font-size:0.85rem; color:var(--text-muted);">Increases custom token yields per accurate card solved.</p>
-                    </div>
-                    <button class="btn-base btn-primary" onclick="buyPerk('tokens')">Buy (<span id="cost-tkn">100</span> Score)</button>
-                </div>
-                <div class="perk-row">
-                    <div>
-                        <strong>Score Multiplier (Level <span id="lvl-scr">1</span>)</strong>
-                        <p style="font-size:0.85rem; color:var(--text-muted);">Scales standard payout thresholds across all system profiles.</p>
-                    </div>
-                    <button class="btn-base btn-primary" onclick="buyPerk('scores')">Buy (<span id="cost-scr">150</span> Score)</button>
-                </div>
-            </div>
-            <button class="btn-base btn-secondary" style="margin-top:20px;" onclick="switchView('screen-menu')">⬅ Back to Hub</button>
-        </div>
+// START POSITION (CRITICAL FIX → avoids black screen)
+controls.getObject().position.set(0, 10, 5);
 
-        <!-- MATCH END SUMMARY -->
-        <div id="screen-summary" class="view-screen">
-            <h2>Match Loop Completed!</h2>
-            <p class="subtitle">The active question deck pool has run completely dry.</p>
-            <div style="background:rgba(0,0,0,0.2); padding:20px; border-radius:12px; margin-bottom:25px;">
-                <p style="margin:10px 0;">Final Points Accumulation: <strong id="sum-points" style="color:var(--success);">0</strong></p>
-                <p style="margin:10px 0;">Current Global Token Cache balance: <strong id="sum-tokens" style="color:var(--warning);">0</strong></p>
-            </div>
-            <button class="btn-base btn-primary" onclick="switchView('screen-menu')">Return to Main Menu</button>
-        </div>
+// =====================
+// BLOCK SYSTEM
+// =====================
+const blocks = [];
 
-    </div>
+const mat = {
+  grass: new THREE.MeshLambertMaterial({ color: 0x3cb043 }),
+  dirt: new THREE.MeshLambertMaterial({ color: 0x8b5a2b }),
+  stone: new THREE.MeshLambertMaterial({ color: 0x888888 }),
+  wood: new THREE.MeshLambertMaterial({ color: 0x7a4a1c })
+};
 
-    <script>
-        // CORE APPLICATION VARIABLES
-        let tokenCache = 50;
-        let runningScore = 0;
-        let activeBlook = "🎲";
-        let unlockedBlooks = ["🎲"];
-        
-        let matchMode = "Classic";
-        let activeIndex = 0;
-        let deckArray = [];
+function block(x,y,z,type){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), mat[type]);
+  m.position.set(x,y,z);
+  scene.add(m);
+  blocks.push(m);
+  return m;
+}
 
-        // ABILITY STAT MODIFIERS
-        let tokenLvl = 1;
-        let scoreLvl = 1;
+// =====================
+// WORLD GEN
+// =====================
+const size = 10;
+const chunks = new Map();
 
-        // DATA LAYER FRAMEWORK
-        const questionPool = [
-            {q: "What is the capital of France?", a: ["Berlin", "London", "Paris", "Madrid"], c: 2},
-            {q: "Which planet is known as the Red Planet?", a: ["Earth", "Mars", "Jupiter", "Venus"], c: 1},
-            {q: "What is 8 + 7?", a: ["13", "14", "15", "16"], c: 2},
-            {q: "Who painted the Mona Lisa?", a: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], c: 2},
-            {q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Ruby"], c: 2},
-            {q: "How many legs does an insect have?", a: ["4", "6", "8", "12"], c: 1},
-            {q: "Which element has the symbol 'O'?", a: ["Gold", "Oxygen", "Osmium", "Zinc"], c: 1},
-            {q: "What is the largest mammal?", a: ["Elephant", "Blue Whale", "Giraffe", "Orca"], c: 1},
-            {q: "What is the square root of 81?", a: ["7", "8", "9", "10"], c: 2},
-            {q: "Which country is home to the kangaroo?", a: ["Africa", "Australia", "Peru", "India"], c: 1},
-            {q: "What gas do plants absorb from the air?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], c: 2},
-            {q: "How many days are in a regular year?", a: ["364", "365", "366", "367"], c: 1},
-            {q: "Which primary color makes green when mixed with yellow?", a: ["Red", "Blue", "Black", "Purple"], c: 1},
-            {q: "What is the capital city of Japan?", a: ["Seoul", "Beijing", "Tokyo", "Bangkok"], c: 2},
-            {q: "How many bones are in an adult human?", a: ["106", "206", "306", "406"], c: 1}
-        ];
+function height(x,z){
+  return Math.floor(Math.sin(x*0.15)*3 + Math.cos(z*0.15)*3);
+}
 
-        const boxManifests = {
-            Space: [
-                {n: "Alien", i: "👽", r: "common", w: 0.50},
-                {n: "Astronaut", i: "🧑‍🚀", r: "rare", w: 0.35},
-                {n: "Rocket Ship", i: "🚀", r: "epic", w: 0.12},
-                {n: "UFO Starship", i: "🛸", r: "legendary", w: 0.03}
-            ],
-            Medieval: [
-                {n: "Castle Guard", i: "🛡️", r: "common", w: 0.50},
-                {n: "Mage Wizard", i: "🧙", r: "rare", w: 0.35},
-                {n: "Fire Dragon", i: "🐉", r: "epic", w: 0.12},
-                {n: "Empire King", i: "👑", r: "legendary", w: 0.03}
-            ]
-        };
+function gen(cx,cz){
+  const key = cx+","+cz;
+  if(chunks.has(key)) return;
+  chunks.set(key,true);
 
-        // PROFILE REFRESH & PERSISTENCE
-        function syncHUD() {
-            document.getElementById("hud-tokens").innerText = tokenCache;
-            document.getElementById("hud-score").innerText = runningScore;
-            document.getElementById("hud-avatar").innerText = activeBlook;
-            
-            // Sync Perks UI Elements
-            document.getElementById("lvl-tkn").innerText = tokenLvl;
-            document.getElementById("cost-tkn").innerText = tokenLvl * 100;
-            document.getElementById("lvl-scr").innerText = scoreLvl;
-            document.getElementById("cost-scr").innerText = scoreLvl * 150;
-            
-            saveGameProgress();
-        }
+  for(let x=0;x<size;x++){
+    for(let z=0;z<size;z++){
+      const wx = cx*size+x;
+      const wz = cz*size+z;
+      const h = height(wx,wz);
 
-        function switchView(targetScreen) {
-            document.querySelectorAll(".view-screen").forEach(s => s.classList.remove("active-view"));
-            document.getElementById(targetScreen).classList.add("active-view");
-            if(targetScreen === "screen-market") populateVault();
-        }
+      for(let y=0;y<=h;y++){
+        let t = "stone";
+        if(y===h) t="grass";
+        else if(y>h-2) t="dirt";
 
-        function openModeSelect() {
-            switchView("screen-modes");
-        }
+        block(wx,y,wz,t);
+      }
+    }
+  }
+}
 
-        // ENGINE LOOP CORE INITIALIZER
-        function initGame(selectedMode) {
-            matchMode = selectedMode;
-            activeIndex = 0;
-            deckArray = [...questionPool].sort(() => Math.random() - 0.5);
-            
-            document.getElementById("game-mode-title").innerText = `Game Mode: ${matchMode}`;
-            switchView("screen-game");
-            renderActiveQuestion();
-        }
+function updateWorld(){
+  const p = controls.getObject().position;
+  const cx = Math.floor(p.x/size);
+  const cz = Math.floor(p.z/size);
 
-        function renderActiveQuestion() {
-            if(activeIndex >= deckArray.length) {
-                concludeMatch();
-                return;
-            }
-            
-            document.getElementById("btn-next").style.display = "none";
-            document.getElementById("game-feedback").innerText = "";
-            toggleAnswerNodes(true);
+  for(let x=-2;x<=2;x++){
+    for(let z=-2;z<=2;z++){
+      gen(cx+x, cz+z);
+    }
+  }
+}
 
-            let currentCard = deckArray[activeIndex];
-            document.getElementById("current-q-index").innerText = activeIndex + 1;
-            document.getElementById("question-text").innerText = currentCard.q;
+// =====================
+// INVENTORY (FIXED ORDER)
+// =====================
+const inv = { grass:0, dirt:0, stone:0, wood:0 };
+let selected = "grass";
 
-            for(let i = 0; i < 4; i++) {
-                let node = document.getElementById(`btn-opt${i}`);
-                node.innerText = currentCard.a[i];
-            }
-        }
+const hotbar = document.getElementById("hotbar");
 
-        function handleAnswer(choiceIdx) {
-            toggleAnswerNodes(false);
-            let currentCard = deckArray[activeIndex];
-            let feedback = document.getElementById("game-feedback");
+function updateHotbar(){
+  hotbar.innerHTML = "";
+  for(const k in inv){
+    const d = document.createElement("div");
+    d.className = "slot";
+    d.innerText = k + "\n" + inv[k];
+    d.onclick = () => selected = k;
+    hotbar.appendChild(d);
+  }
+}
+updateHotbar();
 
-            if(choiceIdx === currentCard.c) {
-                feedback.style.color = "var(--success)";
-                feedback.innerText = "Correct! Match points and token drop credited.";
-                
-                // MATH BONUSES BASELINES
-                let pointReward = 10 * scoreLvl;
-                let tokenReward = 5 * tokenLvl;
+// =====================
+// RAYCAST
+// =====================
+const ray = new THREE.Raycaster();
 
-                if (matchMode === "Factory") {
-                    pointReward *= 3; 
-                }
+function hit(){
+  ray.setFromCamera({x:0,y:0},camera);
+  return ray.intersectObjects(blocks)[0];
+}
 
-                runningScore += pointReward;
-                tokenCache += tokenReward;
-                syncHUD();
+document.addEventListener("mousedown",(e)=>{
+  const h = hit();
+  if(!h) return;
 
-                if(matchMode === "Crypto") {
-                    setTimeout(() => { switchView("screen-hack"); }, 1000);
-                    return;
-                }
-            } else {
-                feedback.style.color = "var(--danger)";
-                feedback.innerText = `Incorrect. Correct choice was: ${currentCard.a[currentCard.c]}`;
-            }
+  if(e.button===0){
+    inv.stone++;
+    scene.remove(h.object);
+    updateHotbar();
+  }
 
-            document.getElementById("btn-next").style.display = "inline-flex";
-        }
+  if(e.button===2){
+    const p = h.object.position.clone().add(h.face.normal);
+    block(p.x,p.y,p.z,selected);
+  }
+});
 
-        function progressQuestion() {
-            activeIndex++;
-            renderActiveQuestion();
-        }
+// =====================
+// MOVEMENT
+// =====================
+const keys = {};
+addEventListener("keydown",e=>keys[e.code]=true);
+addEventListener("keyup",e=>keys[e.code]=false);
 
-        function executeHackTile() {
-            let alternativeBonus = 25 * scoreLvl;
-            runningScore += alternativeBonus;
-            syncHUD();
-            alert(`Hacked node bypassed! Stole +${alternativeBonus} score points.`);
-            switchView("screen-game");
-            progressQuestion();
-        }
+function move(){
+  if(keys.KeyW) controls.moveForward(0.15);
+  if(keys.KeyS) controls.moveForward(-0.15);
+  if(keys.KeyA) controls.moveRight(-0.15);
+  if(keys.KeyD) controls.moveRight(0.15);
+}
 
-        function toggleAnswerNodes(status) {
-            for(let i = 0; i < 4; i++) {
-                document.getElementById(`btn-opt${i}`).disabled = !status;
-            }
-        }
+// =====================
+// DEBUG (FOR SAFETY)
+// =====================
+const testCube = new THREE.Mesh(
+  new THREE.BoxGeometry(2,2,2),
+  new THREE.MeshBasicMaterial({ color: 0xff0000 })
+);
+testCube.position.set(0,5,0);
+scene.add(testCube);
 
-        function concludeMatch() {
-            document.getElementById("sum-points").innerText = runningScore;
-            document.getElementById("sum-tokens").innerText = tokenCache;
-            switchView("screen-summary");
-        }
+// =====================
+// LOOP (SAFE)
+// =====================
+function animate(){
+  requestAnimationFrame(animate);
 
-        // MARKET & DROPS PROBABILITY SIMULATOR
-        function buyGachaBox(boxName) {
-            let alertBox = document.getElementById("market-alert");
-            if(tokenCache < 25) {
-                alertBox.style.color = "var(--danger)";
-                alertBox.innerText = "Error: Insufficient token balances available.";
-                return;
-            }
+  try { move(); } catch(e){}
+  try { updateWorld(); } catch(e){}
 
-            tokenCache -= 25;
-            let rng = Math.random();
-            let accumulatedChance = 0;
-            let roster = boxManifests[boxName];
-            let wonItem = roster[0];
+  renderer.render(scene,camera);
+}
+animate();
 
-            for(let element of roster) {
-                accumulatedChance += element.w;
-                if(rng <= accumulatedChance) {
-                    wonItem = element;
-                    break;
-                }
-            }
-
-            if(!unlockedBlooks.includes(wonItem.i)) {
-                unlockedBlooks.push(wonItem.i);
-            }
-
-            alertBox.style.color = "var(--warning)";
-            alertBox.innerHTML = `Acquired: <span style="font-size:1.6rem">${wonItem.i}</span> ${wonItem.n} [<span class="clr-${wonItem.r}">${wonItem.r}</span>]!`;
-            
-            populateVault();
-            syncHUD();
-        }
-
-        function populateVault() {
-            let vault = document.getElementById("vault-items");
-            vault.innerHTML = "";
-            
-            unlockedBlooks.forEach(icon => {
-                let nodeCard = document.createElement("div");
-                nodeCard.className = `vault-card ${activeBlook === icon ? 'active-avatar' : ''}`;
-                nodeCard.innerHTML = `<div class="glyph">${icon}</div>`;
-                
-                nodeCard.onclick = () => {
-                    activeBlook = icon;
-                    syncHUD();
-                    populateVault();
-                };
-                vault.appendChild(nodeCard);
-            });
-        }
-
-        // STAT TUNING MANAGEMENT
-        function buyPerk(type) {
-            if(type === 'tokens') {
-                let cost = tokenLvl * 100;
-                if(runningScore >= cost) {
-                    runningScore -= cost;
-                    tokenLvl++;
-                } else { alert("Insufficient points/cash."); }
-            } else if(type === 'scores') {
-                let cost = scoreLvl * 150;
-                if(runningScore >= cost) {
-                    runningScore -= cost;
-                    scoreLvl++;
-                } else { alert("Insufficient points/cash."); }
-            }
-            syncHUD();
-        }
-
-        // STORAGE PERSISTENCE ENGINE
-        function saveGameProgress() {
-            const saveState = {
-                tokens: tokenCache,
-                score: runningScore,
-                avatar: activeBlook,
-                unlocked: unlockedBlooks,
-                tLvl: tokenLvl,
-                sLvl: scoreLvl
-            };
-            localStorage.setItem("blooket_save_state", JSON.stringify(saveState));
-        }
-
-        function loadGameProgress() {
-            const rawData = localStorage.getItem("blooket_save_state");
-            if(rawData) {
-                const parsed = JSON.parse(rawData);
-                tokenCache = parsed.tokens || 50;
-                runningScore = parsed.score || 0;
-                activeBlook = parsed.avatar || "🎲";
-                unlockedBlooks = parsed.unlocked || ["🎲"];
-                tokenLvl = parsed.tLvl || 1;
-                scoreLvl = parsed.sLvl || 1;
-            }
-            syncHUD();
-        }
-
-        // INITIAL APPLICATION RUNHOURS HOOK
-        window.onload = () => {
-            loadGameProgress();
-        };
-    </script>
+</script>
 </body>
 </html>
