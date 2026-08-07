@@ -1,13 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortnite Mod Menu</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logan Clicker</title>
+
+<style>
+body{
+    margin:0;
+    background:#181818;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    text-align:center;
+}
+
+h1{
+    margin-top:20px;
+    font-size:48px;
+}
+
+#score{
+    font-size:34px;
+    margin:15px;
+}
+
+#clicker{
+    width:280px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:.08s;
+    user-select:none;
+}
+
+#clicker:hover{
+    transform:scale(1.03);
+}
+
+#clicker:active{
+    transform:scale(.95);
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin-top:20px;
+    flex-wrap:wrap;
+}
+
+.shop{
+    background:#2a2a2a;
+    padding:20px;
+    border-radius:12px;
+    width:300px;
+}
+
+button{
+    width:100%;
+    margin:8px 0;
+    padding:12px;
+    font-size:16px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#4CAF50;
+    color:white;
+}
+
+button:hover{
+    background:#45a049;
+}
+
+.stats{
+    font-size:18px;
+    margin-top:10px;
+}
+</style>
 </head>
+
 <body>
-    <!-- Your mod menu content will go here -->
-    <script src="script.js"></script>
+
+<h1>logan</h1>
+
+<div id="score">0 Clicks</div>
+
+<img id="clicker" src="logan.png" alt="logan">
+
+<div class="container">
+
+<div class="shop">
+<h2>Upgrades</h2>
+
+<button onclick="buyPower()">
+Better Click
+<br>
+Cost: <span id="powerCost">25</span>
+</button>
+
+<button onclick="buyAuto()">
+Auto Clicker
+<br>
+Cost: <span id="autoCost">100</span>
+</button>
+
+</div>
+
+<div class="shop">
+
+<h2>Stats</h2>
+
+<div class="stats">
+Clicks Per Click:
+<span id="powerStat">1</span>
+</div>
+
+<div class="stats">
+Auto Clickers:
+<span id="autoStat">0</span>
+</div>
+
+<div class="stats">
+Auto Per Second:
+<span id="autoRate">0</span>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let clicks=0;
+let clickPower=1;
+let autoClickers=0;
+
+let powerCost=25;
+let autoCost=100;
+
+function update(){
+
+document.getElementById("score").innerHTML=
+Math.floor(clicks)+" Clicks";
+
+document.getElementById("powerStat").innerHTML=clickPower;
+
+document.getElementById("autoStat").innerHTML=autoClickers;
+
+document.getElementById("autoRate").innerHTML=autoClickers;
+
+document.getElementById("powerCost").innerHTML=Math.floor(powerCost);
+
+document.getElementById("autoCost").innerHTML=Math.floor(autoCost);
+
+localStorage.setItem("loganSave",JSON.stringify({
+clicks,
+clickPower,
+autoClickers,
+powerCost,
+autoCost
+}));
+
+}
+
+document.getElementById("clicker").onclick=function(){
+
+clicks+=clickPower;
+update();
+
+}
+
+function buyPower(){
+
+if(clicks>=powerCost){
+
+clicks-=powerCost;
+clickPower++;
+powerCost=Math.floor(powerCost*1.6);
+
+update();
+
+}
+
+}
+
+function buyAuto(){
+
+if(clicks>=autoCost){
+
+clicks-=autoCost;
+autoClickers++;
+autoCost=Math.floor(autoCost*1.8);
+
+update();
+
+}
+
+}
+
+setInterval(function(){
+
+clicks+=autoClickers;
+update();
+
+},1000);
+
+const save=localStorage.getItem("loganSave");
+
+if(save){
+
+const s=JSON.parse(save);
+
+clicks=s.clicks||0;
+clickPower=s.clickPower||1;
+autoClickers=s.autoClickers||0;
+powerCost=s.powerCost||25;
+autoCost=s.autoCost||100;
+
+}
+
+update();
+
+</script>
+
 </body>
 </html>
